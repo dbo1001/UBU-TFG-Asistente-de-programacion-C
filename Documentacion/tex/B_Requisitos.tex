@@ -2,10 +2,122 @@
 
 \section{Introducción}
 
+El objetivo general de este programa es la depuración de código en lenguaje C. Para ello se requerirá poder abrir, crear, editar, compilar y depurar archivos con la extensión .c
+
 \section{Objetivos generales}
 
+\item OBJ-01:Depuración de código C.
+
 \section{Catalogo de requisitos}
+
+\item RI-01:Abrir archivos .c y .h
+\item RI-02:Crear archivos .c y .h
+\item RI-03:Editar archivos .c y .h
+\item RI-04:Guardar archivos .c y .h
+\item RI-05:Compilación de archivos .c
+\item RI-06:Depuración de archivos .c
 
 \section{Especificación de requisitos}
 
 
+\begin{table}[h!]
+\centering
+\begin{tabular}[c]{|c|m{10cm}|}
+\hline
+RF-01 & Abrir archivos .c y .h \\
+\hline
+\hline
+Versión & Versión 1.0 \\
+\hline
+Autor & Ruben Marcos Gonzalez \\
+\hline
+Tutor & Carlos Pardo Aguilar \\
+\hline
+Objetivos asociados & OBJ-01:Depuración de código C. \\
+\hline
+Requisitos asociados & RI-01:Abrir archivos .c y .h \\
+\hline
+Descripción & El programa deberá ser capaz de abrir archivos con la extensión .c y .h \\
+\hline
+Precondición & El usuario deberá haber iniciado el asistente \\
+\hline
+\multirow{2}{*}{Secuencia normal} & Paso 1: solicita al sistema el explorador de archivos \\
+\hline
+& Paso 2: una vez seleccionado el archivo se accederá al editor \\
+\hline
+\multirow{2}{*}{Excepciones} & Paso 2: el usuario abrirá un archivo con extensión no permitida \\
+\hline
+& Paso 2: el usuario abrirá un archivo corrupto \\
+\hline
+Postcondicón & El usuario deberá tener cargado un archivo con la extensión .c o .h \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\begin{tabular}[c]{|c|m{10cm}|}
+\hline
+RF-04 & Abrir archivos .c y .h \\
+\hline
+\hline
+Versión & Versión 1.0 \\
+\hline
+Autor & Ruben Marcos Gonzalez \\
+\hline
+Tutor & Carlos Pardo Aguilar \\
+\hline
+Objetivos asociados & OBJ-01:Depuración de código C. \\
+\hline
+Requisitos asociados & RI-04:Guardar archivos .c y .h \\
+\hline
+Descripción & El programa deberá ser capaz de guardar archivos con la extensión .c y .h \\
+\hline
+Precondición & El usuario deberá tener cargado en el programa un archivo \\
+\hline
+\multirow{2}{*}{Secuencia normal} & Paso 1: solicita al sistema el explorador de archivos \\
+\hline
+& Paso 2: se guardara el archivo con el nombre y la extensión elegidas \\
+\hline
+\multirow{2}{*}{Excepciones} & Paso 2: no haya espacio en el disco duro, se vuelve al paso 1 \\
+\hline
+& Paso 2: existe un archivo con el mismo nombre, se solicitara al usuario si quiere sobrescribirlo \\
+\hline
+Postcondicón & El usuario deberá haber cargado un archivo con la extensión .c o .h \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\begin{tabular}[c]{|c|m{10cm}|}
+\hline
+RF-05 & Compilar archivos .c \\
+\hline
+\hline
+Versión & Versión 1.0 \\
+\hline
+Autor & Ruben Marcos Gonzalez \\
+\hline
+Tutor & Carlos Pardo Aguilar \\
+\hline
+Objetivos asociados & OBJ-01:Depuración de código C. \\
+\hline
+Requisitos asociados & RI-05:Compilar archivos .c \\
+\hline
+Descripción & El programa deberá ser capaz de compilar archivos .c y crear ejecutables a partir de ellos \\
+\hline
+Precondición & El usuario deberá haber guardado los cambios del archivo \\
+\hline
+\multirow{2}{*}{Secuencia normal} & Paso 1: creará el archivo .o correspondiente a dicho archivo \\
+\hline
+& Paso 2: generará un ejecutable a partir del archivo .c actual \\
+\hline
+\multirow{2}{*}{Excepciones} & Paso 1: el código este mal escrito lo que genera un error de compilación y la interrupción de la misma \\
+\hline
+& Paso 2: el archivo modificado no ha sido guardado por lo que se ejecutara el requisito RI-04 \\
+\hline
+Postcondicón & -- \\
+\hline
+\end{tabular}
+\end{table}
