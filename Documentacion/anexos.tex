@@ -275,7 +275,43 @@
   \end{center}
 }
 
+%
+% Nuevo comando para tablas internas
+\newcommand{\innerTable}[1]{%
+    \begin{tabular}[c]{m{0.7cm}|m{9.65cm}}
+        Paso&  \\
+        \hline
+        #1
+    \end{tabular} \\
+}
 
+\newcommand{\innerTables}[2]{% 
+    \hline          Secuencia normal & \innerTable{#1}
+    \hline          Excepciones & \innerTable{#2}
+}
+
+%
+% Nuevo comando para tablas de requisitos funcionales
+\newcommand{\outerTable}[9]{%
+    \begin{table}[h!]
+        \centering
+        \caption{RF-#1 #2}
+        \begin{tabular}[c]{m{2.2cm}|m{11cm}|}
+            %\hline          RF-#1 & #2\\
+            \hline\hline    Versión & #3 \\
+            \hline          Autor & Rubén Marcos Gonzalez \\
+            \hline          Tutor & Carlos Pardo Aguilar \\
+            \hline          Objetivos asociados & #4 \\
+            \hline          Requisitos asociados & #5 \\
+            \hline          Descripción & #6 \\
+            \hline          Precondición & #7 \\
+            \innerTables#8
+            \hline          Postcondicón & #9\\
+            \hline
+        \end{tabular}
+        \label{RF:#1}
+    \end{table}
+}
 
 
 \graphicspath{ {./img/} }
@@ -346,8 +382,8 @@
 
 % Datos de portada
 \title{título del TFG \\Documentación Técnica}
-\author{Ruben Marcos Gonzalez}
-\tutor{Carlos Pardo Agular}
+\author{Rubén Marcos González}
+\tutor{Carlos Pardo Aguilar}
 \date{\today}
 
 \begin{document}

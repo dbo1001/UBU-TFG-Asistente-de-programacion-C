@@ -20,104 +20,129 @@ El objetivo general de este programa es la depuración de código en lenguaje C.
 \section{Especificación de requisitos}
 
 
-\begin{table}[h!]
-\centering
-\begin{tabular}[c]{|c|m{10cm}|}
-\hline
-RF-01 & Abrir archivos .c y .h \\
-\hline
-\hline
-Versión & Versión 1.0 \\
-\hline
-Autor & Ruben Marcos Gonzalez \\
-\hline
-Tutor & Carlos Pardo Aguilar \\
-\hline
-Objetivos asociados & OBJ-01:Depuración de código C. \\
-\hline
-Requisitos asociados & RI-01:Abrir archivos .c y .h \\
-\hline
-Descripción & El programa deberá ser capaz de abrir archivos con la extensión .c y .h \\
-\hline
-Precondición & El usuario deberá haber iniciado el asistente \\
-\hline
-\multirow{2}{*}{Secuencia normal} & Paso 1: solicita al sistema el explorador de archivos \\
-\hline
-& Paso 2: una vez seleccionado el archivo se accederá al editor \\
-\hline
-\multirow{2}{*}{Excepciones} & Paso 2: el usuario abrirá un archivo con extensión no permitida \\
-\hline
-& Paso 2: el usuario abrirá un archivo corrupto \\
-\hline
-Postcondicón & El usuario deberá tener cargado un archivo con la extensión .c o .h \\
-\hline
-\end{tabular}
-\end{table}
 
-\begin{table}[h!]
-\centering
-\begin{tabular}[c]{|c|m{10cm}|}
+\outerTable{01}{Abrir archivos .c y .h}
+{Versión 1.0}
+{OBJ-01:Depuración de código C.}
+{--}
+{El programa deberá ser capaz de abrir archivos con la extensión .c y .h}
+{El usuario deberá haber iniciado el asistente}
+{{1: & solicita al sistema el explorador de archivos \\
 \hline
-RF-04 & Abrir archivos .c y .h \\
+2: & una vez seleccionado el archivo se accederá al editor \\}
+{2: & el usuario abrirá un archivo con extensión no permitida \\
 \hline
-\hline
-Versión & Versión 1.0 \\
-\hline
-Autor & Ruben Marcos Gonzalez \\
-\hline
-Tutor & Carlos Pardo Aguilar \\
-\hline
-Objetivos asociados & OBJ-01:Depuración de código C. \\
-\hline
-Requisitos asociados & RI-04:Guardar archivos .c y .h \\
-\hline
-Descripción & El programa deberá ser capaz de guardar archivos con la extensión .c y .h \\
-\hline
-Precondición & El usuario deberá tener cargado en el programa un archivo \\
-\hline
-\multirow{2}{*}{Secuencia normal} & Paso 1: solicita al sistema el explorador de archivos \\
-\hline
-& Paso 2: se guardara el archivo con el nombre y la extensión elegidas \\
-\hline
-\multirow{2}{*}{Excepciones} & Paso 2: no haya espacio en el disco duro, se vuelve al paso 1 \\
-\hline
-& Paso 2: existe un archivo con el mismo nombre, se solicitara al usuario si quiere sobrescribirlo \\
-\hline
-Postcondicón & El usuario deberá haber cargado un archivo con la extensión .c o .h \\
-\hline
-\end{tabular}
-\end{table}
+2: & el usuario abrirá un archivo corrupto \\}}
+{El usuario deberá tener cargado un archivo con la extensión .c o .h}
 
-\begin{table}[h!]
-\centering
-\begin{tabular}[c]{|c|m{10cm}|}
+
+\outerTable{02}{Crear archivos .c y .h}
+{Versión 1.0}
+{OBJ-01:Depuración de código C.}
+{--}
+{El programa deberá ser capaz de crear nuevos archivos con la extensión .c y .h}
+{El usuario deberá haber iniciado el asistente}
+{{1: & solicita al programador la ruta en la que quiere trabajar \\
 \hline
-RF-05 & Compilar archivos .c \\
+2: & se solicita al programador el nombre del archivo \\
 \hline
+3: & se generará un archivo con el nombre y la extensión seleccionados \\}
+{
+1: & el usuario selecciona una ruta inexistente: se le preguntará sobre si crear las carpetas correspondientes o si quiere seleccionar una nueva ruta \\
 \hline
-Versión & Versión 1.0 \\
+3: & el usuario escogerá un nombre ya existente y se le preguntara si quiere sobreescribir el archivo \\}}
+{El sistema deberá haber creado el archivo correspondiente y tenerlo cargado en el asistente}
+
+\outerTable{03}{Editar archivos .c y .h}
+{Versión 1.0}
+{OBJ-01:Depuración de código C.}
+{\item\nameref{RF:01}
+\item\nameref{RF:02}}
+{El programa deberá ser capaz de editar archivos con la extensión .c y .h}
+{El usuario deberá tener cargado un archivo en el asistente}
+{{1: & el usuario modificará lineas de código \\}
+{
+1: & el usuario no dispondrá de permisos de escritura por lo cual no se le permitirá modificar lineas de codigo \\}}
+{El asistente deberá tener en memoria el archivo modificado para guardarlo posteriormente}
+
+\outerTable{04}{Guardar archivos .c y .h}
+{Versión 1.0}
+{OBJ-01:Depuración de código C.}
+{\nameref{RF:03}}
+{El programa deberá ser capaz de guardar archivos con la extensión .c y .h}
+{El usuario deberá tener cargado en el programa un archivo}
+{{1: & solicita al sistema el explorador de archivos \\
 \hline
-Autor & Ruben Marcos Gonzalez \\
+2: & se sobrescribirá el archivo con el nombre y la extensión elegidas \\}
+{2: & no haya espacio en el disco duro, se vuelve al paso 1 \\
 \hline
-Tutor & Carlos Pardo Aguilar \\
+2: & no existe dicho archivo, el sistema creará uno con el nombre y extensión elegidas \\}}
+{El sistema deberá haber modificado correctamente el archivo}
+
+\outerTable{05}{Compilar archivos .c}
+{Versión 1.0}
+{OBJ-01:Depuración de código C.}
+{\nameref{RF:04}}
+{El programa deberá ser capaz de compilar archivos .c y crear ejecutables a partir de ellos}
+{El usuario deberá haber guardado los cambios del archivo}
+{{1: & sobrescribirá el archivo .o correspondiente a dicho archivo \\
 \hline
-Objetivos asociados & OBJ-01:Depuración de código C. \\
+2: & sobrescribirá el ejecutable \\}
+{1: & las modificaciones del archivo no han sido guardadas: se ejecutará el RF-04: Guardar archivos .c y .h \\
 \hline
-Requisitos asociados & RI-05:Compilar archivos .c \\
+1: & el código de un error de compilación y se interrumpirá el proceso \\
 \hline
-Descripción & El programa deberá ser capaz de compilar archivos .c y crear ejecutables a partir de ellos \\
+1: & no existe el archivo .o correspondiente por lo que se creará uno nuevo \\
 \hline
-Precondición & El usuario deberá haber guardado los cambios del archivo \\
+2: & no existe el ejecutable correspondiente por lo que se creará uno nuevo \\}}
+{Disponer de un ejecutable funcional}
+
+\outerTable{06}{Ejecutar linea de código (entrando en función)}
+{Versión 1.0}
+{OBJ-01:Depuración de código C.}
+{\nameref{RF:05}}
+{El programa deberá ser capaz de ejecutar una a una las lineas de código de un programa en lenguaje C}
+{El usuario deberá haber compilado el archivo}
+{{1: & se ejecutará una linea de código \\
 \hline
-\multirow{2}{*}{Secuencia normal} & Paso 1: creará el archivo .o correspondiente a dicho archivo \\
+2: & Irá mostrando las variables en memoria de ese programa acorde al \nameref{RF:09}\\}
+{1: & no se dispone de un ejecutable funcional: se vuelve al \nameref{RF:05} \\
 \hline
-& Paso 2: generará un ejecutable a partir del archivo .c actual \\
+2: & encuentra una función por saltará al RF-07 Ejecutar linea de código (entrando en función) sobre esa función\\}}
+{--}
+
+\outerTable{07}{Ejecutar linea de código (saltando función)}
+{Versión 1.0}
+{OBJ-01:Depuración de código C.}
+{\nameref{RF:05}}
+{El programa deberá ser capaz de ejecutar una a una las lineas de código de un programa en lenguaje C}
+{El usuario deberá haber compilado el archivo}
+{{1: & se ejecutará una linea de código \\
 \hline
-\multirow{2}{*}{Excepciones} & Paso 1: el código este mal escrito lo que genera un error de compilación y la interrupción de la misma \\
+2: & Irá mostrando las variables en memoria de ese programa acorde al \nameref{RF:09}\\}
+{1: & no se dispone de un ejecutable funcional: se vuelve al \nameref{RF:05} \\}}
+{--}
+
+\outerTable{08}{Ejecutar código completo}
+{Versión 1.0}
+{OBJ-01:Depuración de código C.}
+{\nameref{RF:05}}
+{El programa deberá ser capaz de ejecutar un programa en lenguaje C completo}
+{El usuario deberá haber compilado el archivo}
+{{1: & se ejecutará el programa completo \\
 \hline
-& Paso 2: el archivo modificado no ha sido guardado por lo que se ejecutara el requisito RI-04 \\
-\hline
-Postcondicón & -- \\
-\hline
-\end{tabular}
-\end{table}
+2: & se mostrá el estado final de todas la variables acorde al \nameref{RF:09}\\}
+{1: & no se dispone de un ejecutable funcional: se vuelve al \nameref{RF:05}\\}}
+{--}
+
+\outerTable{09}{Mostrar variables en memoria}
+{Versión 1.0}
+{OBJ-01:Depuración de código C.}
+{\item\nameref{RF:06}
+\item\nameref{RF:07}
+\item\nameref{RF:08}}
+{El programa deberá ser capaz de mostrar en una tabla las variables en memoria un un programa C}
+{El usuario deberá empezado a ejecutar un programa C}
+{{1: & cada vez que se cree o modifique una variable se mostrará en la tabla \\}
+{-- & --\\}}
+{--}

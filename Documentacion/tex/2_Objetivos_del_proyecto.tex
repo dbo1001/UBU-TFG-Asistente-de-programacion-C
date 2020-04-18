@@ -4,45 +4,28 @@
 \item El principal objetivo del proyecto es la creación de una interfaz limpia y clara que permita monitorizar las variables para nuevos alumnos que nunca hayan estudiado programación. Para ello nos basaremos en interfaces de desarrollo vistos en distintas clases prácticas: MatLab, Spyder y Eclipse.
 \item Uno de los objetivos es que el interprete de C muestre por pantalla el estado de todas la variables utilizadas en la ejecución, mostrando su valor, su espacio en memoria y su tipo ver \ref{tabla:1}.
 
-
-\begin{table}
-\centering
-\begin{tabular}{|l|c|c|c|}
-\hline 
-\textbf{Nombre} & \textbf{Tipo} & \textbf{Hex} & \textbf{valor}\\ 
-\hline 
+\tablaSmall{Ejemplo de visualización de la tabla de variables}{|l|c|c|c|}{1}{
+ \textbf{Nombre} & \textbf{Tipo} & \textbf{Hex} & \textbf{valor}\\ 
+}{
 Num & int & 0x5F8 & 1528 \\ 
-\hline 
 Letra & char & 0x3F & ? \\ 
-\hline 
-\blacktriangleright Vector & int[3] & - & - \\
-\hline 
-\hline 
+\hline
+\hline
 \blacktriangledown Vector & int[3] & - & - \\
-
-Vector[0] & int & 0x17 & 23 \\ 
-
-Vector[1] & int & 0x39 & 57 \\  
- 
-Vector[2] & int & 0x8D & 141 \\  
-\hline 
-\blacktriangleright Estructura & Struct & - & - \\
-\hline 
-\hline 
-\blacktriangledown Estructura & Struct & - & - \\
+ Vector[0] & int & 0x17 & 23 \\ 
+ Vector[1] & int & 0x39 & 57 \\  
+ Vector[2] & int & 0x8D & 141 \\  
+\hline
+\hline
+\blacktriangledown Estructura & Struct[3] & - & - \\
 
 Estructura[0] & int & 0x5D & 93 \\ 
 
 Estructura[1] & char & 0x40 & @ \\  
  
 Estructura[2] & char & 0x20 &   \\
-\hline 
+}
 
-
-\end{tabular}
-\caption{Ejemplo de visualización de la tabla de variables}
-\label{tabla:1}
-\end{table}
 \item Otro de los objetivos es que el interprete nos permita ejecutar las lineas de código una a una
 \item Siguiendo con el objetivo anterior permitir la inclusión de breakpoints para facilitar la depuración de código
 \end{itemize}
