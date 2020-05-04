@@ -68,10 +68,14 @@ def abrir():
         
         
 def guardar():
+    '''
+    Guarda los cambios efectuados en el archivo
+    '''
     global texto
     global filename
     global saved
     if filename is None:
+        #En caso de que no tenga asignado un nombre de archivo te pide uno
         guardar_como()
     else:
         file = open(filename, mode= 'w+')
@@ -81,7 +85,10 @@ def guardar():
         savebutton.config(state=DISABLED)
         saved = True
         
-def guardar_como(): 
+def guardar_como():
+    '''
+    Te permite seleccionar un archivo y sobreescribirlo con el codigo actual en el programa
+    '''
     global texto
     global filename
     global saved
@@ -106,12 +113,18 @@ def guardar_como():
         aceptbutton.pack( side = LEFT)
 
 def compilar():
+    '''
+    compila un archivo con extensión .c
+    en caso de haber errores de compilación, pintará en rojo las lineas que detecta como erroneas
+    
+    si el archivo no esta guardado llama a la función guardar
+    '''
     global filename
     global saved
     global compiled
-    print(saved)
     if not saved:
         guardar()
+    code.tag_delete("err")
     command = "gcc " + filename + " -g -o " + filename[:-2] + " && echo ok || echo err"
     retorno=str(check_output(command, stderr=subprocess.STDOUT, shell=True))[2:-1]
     if len(retorno) == 7:
@@ -122,18 +135,36 @@ def compilar():
         compilebutton.config(state=DISABLED)
         compiled=True
     else:
+        #Esto es por un error que los \n los escribe como texto tal cual en vez de hacer un salto de linea
         while "\\" in retorno:
             pos=retorno.find('\\')
             consola.config(state=NORMAL)
             consola.insert(tkinter.END, retorno[:pos])
             if retorno[pos+1] is 'n':
                 consola.insert(tkinter.END, '\n')
-            consola.config(state=DISABLED)
+                consola.config(state=DISABLED)
+                errorpos=retorno.find(".c:",len(filename)+2)
+                error=copy.copy(retorno[errorpos+3:])
+                errorpos=error.find(":")
+                error=error[:errorpos]
+                #pinta las lineas en las que el compilador detecta un error de rojo
+                inicio=str(float(error))
+                fin=str(float(error)+1)
+                
+                code.tag_add("err",inicio,fin)
+                
+                code.tag_config("err",background="red", foreground="white")
             retorno=retorno[pos+2:]
         raise Exception
 
 
 def ejecutar():
+    '''
+    utiliza la consola del sistema para ejecutar un archivo .c
+    las funciones de entrada (como un scanf) son irrealizables
+    
+    si el archivo no esta compilado se llamará a la función compilar
+    '''
     global filename
     global compiled
     try:
@@ -151,7 +182,6 @@ def ejecutar():
     else:
         command = filename[:-2] + " && echo ok || echo err"
         p = subprocess.Popen([filename[:-2]], stdin=subprocess.PIPE)
-#        print(p.communicate().decode)
 
         retorno=str(check_output(command, shell=True))[2:-3]
         while "\\" in retorno:
@@ -173,11 +203,17 @@ def ejecutar():
 	
 
 def debugon():
+    '''
+    permite al usuario acceder a las opciones del debug
+    
+    si el archivo no esta compilado llamará a la función compilar
+    '''
     global filename
     global compiled
     global funciones
     global iterexec
     global vardicts
+    global nlib
     try:
         if not compiled:
             consola.config(state=NORMAL)
@@ -201,6 +237,8 @@ def debugon():
                     nombre = getattr(next(iter(siguiente)),'name')
                     funciones[nombre]=siguiente
         except StopIteration:
+            texto = code.get(1.0, END)
+            nlib = texto.count("#include")
             debugbutton.config(text="Salir del modo debug", command=debugoff)
             savebutton.config(state=DISABLED)
             compilebutton.config(state=DISABLED)
@@ -216,75 +254,38 @@ def debugon():
                 
 
 def nextline():
+    '''
+    esta función se ejecuta cada vez que el usuario pulsa el botón next
+    le va pasando por cabecera las lineas del codigo en formato tabla ast
+    '''
+    global vardicts
+    global nlib
     try:
         line = iterexec[-1].popleft()
         
-        #Declaracion de variables/constantes
-        if isinstance(line, pycparser.c_ast.Decl):
-            vardicts[-1][1][line.name]=[None,None]
-            print(line)
-            for i in line:
-                #Asignacion de tipo
-                if isinstance(i, pycparser.c_ast.TypeDecl):                            
-                    vardicts[-1][1][line.name][0]=dict(i.children())["type"].names[0]
-                #Valor inicial
-                else:
-                    vardicts[-1][1][line.name][1] = getvalue(i)
-            if vardicts[-1][1][line.name][1] is not None:
-                if "int" in vardicts[-1][1][line.name][0]:
-                    vardicts[-1][1][line.name][1] = int(vardicts[-1][1][line.name][1])
-                elif "float" or "double" in vardicts[-1][1][line.name][0]:
-                    vardicts[-1][1][line.name][1] = float(vardicts[-1][1][line.name][1])
-                            
-        #Asignacion de valores
-        elif isinstance(line, pycparser.c_ast.Assignment):
-            partes = iter(line)
-            left = next(partes).name
-            right = next(partes)
-            vardicts[-1][1][left][1] = getvalue(right)
-            if "int" in vardicts[-1][1][left][0]:
-                vardicts[-1][1][left][1] = int(vardicts[-1][1][left][1])
-            elif "float" or "double" in vardicts[-1][1][left][0]:
-                vardicts[-1][1][left][1] = float(vardicts[-1][1][left][1])
-            
-        #Incrementar/decrementar
-        elif isinstance(line, pycparser.c_ast.UnaryOp):
-            unary(line)
-            
-        #If
-        elif isinstance(line, pycparser.c_ast.If):
-            ifbody=dict(line.children())
-            condicion=getvalue(ifbody['cond'])
-            if condicion:
-                iterexec.append(deque(ifbody['iftrue']))
-            elif 'iffalse' in ifbody:
-                iterexec.append(deque(ifbody['iffalse']))
+        numline=str(line.coord)
+        pos = numline.find(".c:")
+        numline=numline[pos+3:]
+        print(numline)
+        pos = numline.find(":")
+        numline=numline[:pos]
+        print(numline)
         
-        #While
-        elif isinstance(line, pycparser.c_ast.While):
-            whilebody=dict(line.children())
-            condicion=getvalue(whilebody['cond'])
-            if condicion:
-                iterexec[-1].appendleft(line)
-                iterexec.append(deque(whilebody['stmt']))
-            
+        inicio=str(float(numline)+nlib)
+        fin=str(float(numline)+1+nlib)
+        #pinta de color azul la linea ejecutada
+        code.tag_delete("exe")
+        code.tag_add("exe",inicio,fin)
+        code.tag_config("exe",background="blue", foreground="white")
         
-        #Imprimimos lsa variables
-        variables.config(state=NORMAL)
-        variables.delete(1.0,END)
-        for i in vardicts:
-            variables.insert(tkinter.END, str(i[0]))
-            variables.insert(tkinter.END, '\n')
-            for j, k in i[1].items():
-                var = str(j) + ": "+ str(k)
-                variables.insert(tkinter.END, var)
-                variables.insert(tkinter.END, '\n')
-        variables.config(state=DISABLED)
+        evalline(line)
 
     except IndexError:
         try:
             iterexec.pop()
         except IndexError:
+            code.tag_delete("exe")
+            nextbutton.config(state=DISABLED)
             adv = Tk()
             adv.title("Advertencia")
             textframe = Frame(adv)
@@ -295,11 +296,167 @@ def nextline():
             aceptframe.pack( side = BOTTOM )
             aceptbutton = Button(aceptframe, text="Aceptar",command=adv.destroy)
             aceptbutton.pack( side = LEFT)
+    finally:
+        #Imprimimos lsa variables
+        variables.config(state=NORMAL)
+        variables.delete(1.0,END)
+        for i in vardicts:
+            variables.insert(tkinter.END, str(i[0]))
+            variables.insert(tkinter.END, '\n')
+            for j, k in i[1].items():
+                if isinstance(k[1],dict):
+                    var = str(j) + ": "+ str(k[0])+"\n"
+                    for m, n in k[1].items():
+                        var+=str(m) + ": "+ str(n)+"\n"
+                else:
+                    var = str(j) + ": "+ str(k)
+                variables.insert(tkinter.END, var)
+                variables.insert(tkinter.END, '\n')
+        variables.config(state=DISABLED)
             
         
-                
+
+def evalline(line):
+    '''
+    Analiza la linea que se le pasa por cabecera
+    '''
+    global vardicts
+    #Declaracion de variables/constantes
+    if isinstance(line, pycparser.c_ast.Decl):
+        vardicts[-1][1][line.name]=[None,None]
+        for i in line:
+            #Asignacion de tipo
+            if isinstance(i, pycparser.c_ast.TypeDecl):
+                vardicts[-1][1][line.name][0]=dict(i.children())["type"].names[0]
+            #Declaracion de arrays
+            elif isinstance(i, pycparser.c_ast.ArrayDecl):
+                vardicts[-1][1][line.name][1]=dict()
+                hijos=dict(i.children())
+                if "dim" in hijos:
+                    vardicts[-1][1][line.name][0]=str(hijos["type"].type.names[0])+"["+str(hijos["dim"].value)+"]"
+                    for j in range(int(hijos["dim"].value)):
+                        posicion=line.name+"["+str(j)+"]"
+                        vardicts[-1][1][line.name][1][posicion]=None
+                else:
+                    vardicts[-1][1][line.name][0]=str(hijos["type"].type.names[0])
+            
+            #Valor inicial en arrays
+            elif isinstance(i, pycparser.c_ast.InitList):
+                hijos=i.children()
+                for j in range(len(hijos)):
+                    posicion=line.name+"["+str(j)+"]"
+                    vardicts[-1][1][line.name][1][posicion]=getvalue(hijos[j][1])
+            #Valor inicial
+            else:
+                vardicts[-1][1][line.name][1] = getvalue(i)
+
+    #Asignacion de valores
+    elif isinstance(line, pycparser.c_ast.Assignment):
+        partes = iter(line)
+        left = next(partes)
+        right = next(partes)
+        if isinstance(left, pycparser.c_ast.ArrayRef):
+            array=left.name.name
+            pos=array+"["+str(getvalue(left.subscript))+"]"
+            setvalue(vardicts[-1][1][array][1][pos],line.op,getvalue(right))
+        else:
+            setvalue(vardicts[-1][1][left.name][1],line.op,getvalue(right))
+
+    #Incrementar/decrementar
+    elif isinstance(line, pycparser.c_ast.UnaryOp):
+        unary(line)
+
+    #If
+    elif isinstance(line, pycparser.c_ast.If):
+        ifbody=dict(line.children())
+        #If true
+        if getvalue(ifbody['cond']):
+            anadido=deque(ifbody['iftrue'])
+            iterexec[-1].extend(anadido)
+            iterexec[-1].rotate(len(anadido))
+        #Else
+        elif 'iffalse' in ifbody:
+            anadido=deque(ifbody['iffalse'])
+            iterexec[-1].extend(anadido)
+            iterexec[-1].rotate(len(anadido))
+            
+    #While
+    elif isinstance(line, pycparser.c_ast.While):
+        whilebody=dict(line.children())
+        #while true
+        if getvalue(whilebody['cond']):
+            anadido=deque(whilebody['stmt'])
+            iterexec[-1].appendleft(line)
+            iterexec[-1].extend(anadido)
+            iterexec[-1].rotate(len(anadido))
+
+    #For
+    elif isinstance(line, pycparser.c_ast.For):
+        forbody=dict(line.children())
+        #for([],,)
+        if 'init' in forbody:
+            init = forbody['init']
+            if isinstance(init, pycparser.c_ast.DeclList):
+                for i in init:
+                    evalline(i)
+            else:
+                evalline(forbody['init'])
+            line.init = None
+        #for(,,[])
+        else:
+            evalline(forbody['next'])
+        #for(,[],)
+        if getvalue(forbody['cond']):
+            anadido=deque(forbody['stmt'])
+            iterexec[-1].appendleft(line)
+            iterexec[-1].extend(anadido)
+            iterexec[-1].rotate(len(anadido))
+
+def ArrayDecl(line,og):
+    vardicts[-1][1][line.name][1]=dict()
+    hijos=dict(i.children())
+    if "dim" in hijos:
+        vardicts[-1][1][line.name][0]=str(hijos["type"].type.names[0])+"["+str(hijos["dim"].value)+"]"
+        for j in range(int(hijos["dim"].value)):
+            posicion=line.name+"["+str(j)+"]"
+            vardicts[-1][1][line.name][1][posicion]=None
+    else:
+        vardicts[-1][1][line.name][0]=str(hijos["type"].type.names[0])
+    
+
+def setvalue(left,op,right):
+    '''
+    Asigna un valor a una variable
+    
+    a     =   18
+    ^     ^   ^
+    left  op  right
+    '''
+    if '+' in op:
+        left += getvalue(right)
+    elif '-' in op:
+        left -= getvalue(right)
+    elif '*' in op:
+        left *= getvalue(right)
+    elif '/' in op:
+        left /= getvalue(right)
+    else:
+        left = getvalue(right)
+    
+    
 def getvalue(line):
+    '''
+    obtiene el valor de una operación, variable, constante... 
+    para poder asiganrselo a una variable, efectuar una comparación, etc
+    
+    se le pasara por cabezera un objeto ast que puede ser multiples cosas: operaciones, constantes...
+    '''
+    global vardicts
     if isinstance(line, pycparser.c_ast.Constant):
+        if "int" in line.type:
+            return int(line.value)
+        elif "double" in line.type:
+            return float(line.value)
         return line.value
     elif isinstance(line, pycparser.c_ast.UnaryOp):
         return unary(line)
@@ -310,6 +467,9 @@ def getvalue(line):
     
     
 def unary(line):
+    '''
+    reliza operaciones con un solo operando como puede ser a++ o -b
+    '''
     global vardicts
     son = next(iter(line))
     if isinstance(son, pycparser.c_ast.ID):
@@ -344,6 +504,12 @@ def unary(line):
         return unary(son)*-1
         
 def binary(line):
+    '''
+    Obtine el valor de una operación aritmetologica como puede ser a&&b o 7+3
+    
+    en el caso de ser una operación con mas de un opernado se utilizará recursividad
+    ej: 3 + 5 + 7 => binary(binary(3,+,5),+,7)
+    '''
     global vardicts
     operandos = list()
     #Obtencion de los operandos
@@ -420,14 +586,21 @@ def binary(line):
                             
     
 def debugoff():
+    '''
+    Sale del modo debug
+    '''
     newbutton.config(state=NORMAL)
     openbutton.config(state=NORMAL)
     exebutton.config(state=NORMAL)
     nextbutton.config(state=DISABLED)
     code.config(state=NORMAL)
+    code.tag_delete("exe")
     debugbutton.config(text="Acceder al modo debug", command=debugon)
 
 def editado(texto):
+    '''
+    Se ejecuta esta funcion cada vez que el usuario modifica el codigo
+    '''
     global saved
     global compiled
     savebutton.config(state=NORMAL)
@@ -438,7 +611,7 @@ def editado(texto):
 
 def get_file():   
     global filename
-    Tk().withdraw()
+#    Tk().withdraw()
     filename = filedialog.askopenfilename()
     if filename is None or len(filename) < 3 or filename[-2] is not "." or filename[-1] is not "c":
         raise NameError
@@ -481,6 +654,7 @@ if __name__ == "__main__":
     
     code = scrolledtext.ScrolledText(textframe, height=40, width=200)
     code.pack(side = LEFT)
+#    code.tag_add("exe","1.0","1.0")
 
     variables = scrolledtext.ScrolledText(textframe, height=40, width=75)
     variables.pack(side = RIGHT)
