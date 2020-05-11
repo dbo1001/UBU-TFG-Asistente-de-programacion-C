@@ -13,10 +13,7 @@ int main(){
 
 int recursividad(int i){
 	if (i>1){
-		return recursividad(i-1) + recursividad(i-2);
+		return recursividad(i-1) + recursividad(i-2)
 	}
 	return i;
 }
-
-
-

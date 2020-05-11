@@ -170,6 +170,7 @@ def ejecutar():
     try:
         if not compiled:
             consola.config(state=NORMAL)
+            consola.delete(1.0,END)
             consola.insert(tkinter.END, 'Archivo no compilado')
             consola.insert(tkinter.END, '\n')
             consola.insert(tkinter.END, 'Compilando...')
@@ -214,9 +215,11 @@ def debugon():
     global iterexec
     global vardicts
     global nlib
+    global estructuras
     try:
         if not compiled:
             consola.config(state=NORMAL)
+            consola.delete(1.0,END)
             consola.insert(tkinter.END, 'Archivo no compilado')
             consola.insert(tkinter.END, '\n')
             consola.insert(tkinter.END, 'Compilando...')
@@ -226,6 +229,7 @@ def debugon():
     except Exception:
         print("error")
     else:
+        estructuras = dict()
         funciones = dict()
         parser = pycparser.parse_file(filename,use_cpp=False)
         iterar = iter(parser)
@@ -233,15 +237,19 @@ def debugon():
             while(True):
                 siguiente = next(iterar)
                 print(siguiente.show())
-                if isinstance(siguiente, pycparser.c_ast.FuncDef):
+                
+                if isinstance(siguiente, pycparser.c_ast.Decl):
+                    if isinstance(next(iter(siguiente)), pycparser.c_ast.Struct):
+                        structs(next(iter(siguiente)))
+                elif isinstance(siguiente, pycparser.c_ast.FuncDef):
                     nombre = getattr(next(iter(siguiente)),'name')
                     funciones[nombre]=siguiente
         except StopIteration:
             texto = code.get(1.0, END)
             nlib = texto.count("#include")
+            #Reutilizo el mismo boton para entrar y salir del modo debug
             debugbutton.config(text="Salir del modo debug", command=debugoff)
-            savebutton.config(state=DISABLED)
-            compilebutton.config(state=DISABLED)
+            #Deshabilitamos los botones que no vamos a usar durante el debuggueo
             newbutton.config(state=DISABLED)
             openbutton.config(state=DISABLED)
             exebutton.config(state=DISABLED)
@@ -266,10 +274,8 @@ def nextline():
         numline=str(line.coord)
         pos = numline.find(".c:")
         numline=numline[pos+3:]
-        print(numline)
         pos = numline.find(":")
         numline=numline[:pos]
-        print(numline)
         
         inicio=str(float(numline)+nlib)
         fin=str(float(numline)+1+nlib)
@@ -297,7 +303,7 @@ def nextline():
             aceptbutton = Button(aceptframe, text="Aceptar",command=adv.destroy)
             aceptbutton.pack( side = LEFT)
     finally:
-        #Imprimimos lsa variables
+        #Imprimimos las variables
         variables.config(state=NORMAL)
         variables.delete(1.0,END)
         for i in vardicts:
@@ -321,31 +327,28 @@ def evalline(line):
     Analiza la linea que se le pasa por cabecera
     '''
     global vardicts
+    global estructuras
     #Declaracion de variables/constantes
     if isinstance(line, pycparser.c_ast.Decl):
-        vardicts[-1][1][line.name]=[None,None]
+        vardicts[-1][1][line.name] = [None,None]
         for i in line:
             #Asignacion de tipo
             if isinstance(i, pycparser.c_ast.TypeDecl):
-                vardicts[-1][1][line.name][0]=dict(i.children())["type"].names[0]
+                if isinstance(i.type, pycparser.c_ast.Struct):
+                    vardicts[-1][1][line.name][0] = i.type.name+"(Struct)"
+                    vardicts[-1][1][line.name][1] = copy.copy(estructuras[i.type.name])
+                else:
+                    vardicts[-1][1][line.name][0] = i.type.names[0]
+                
             #Declaracion de arrays
             elif isinstance(i, pycparser.c_ast.ArrayDecl):
-                vardicts[-1][1][line.name][1]=dict()
-                hijos=dict(i.children())
-                if "dim" in hijos:
-                    vardicts[-1][1][line.name][0]=str(hijos["type"].type.names[0])+"["+str(hijos["dim"].value)+"]"
-                    for j in range(int(hijos["dim"].value)):
-                        posicion=line.name+"["+str(j)+"]"
-                        vardicts[-1][1][line.name][1][posicion]=None
-                else:
-                    vardicts[-1][1][line.name][0]=str(hijos["type"].type.names[0])
+                vardicts[-1][1][line.name][1] = list()
+                vardicts[-1][1][line.name][0] = arraydecl(i,vardicts[-1][1][line.name][1])
             
             #Valor inicial en arrays
             elif isinstance(i, pycparser.c_ast.InitList):
-                hijos=i.children()
-                for j in range(len(hijos)):
-                    posicion=line.name+"["+str(j)+"]"
-                    vardicts[-1][1][line.name][1][posicion]=getvalue(hijos[j][1])
+                initlist(i,vardicts[-1][1][line.name][1])
+                
             #Valor inicial
             else:
                 vardicts[-1][1][line.name][1] = getvalue(i)
@@ -356,11 +359,11 @@ def evalline(line):
         left = next(partes)
         right = next(partes)
         if isinstance(left, pycparser.c_ast.ArrayRef):
-            array=left.name.name
-            pos=array+"["+str(getvalue(left.subscript))+"]"
-            setvalue(vardicts[-1][1][array][1][pos],line.op,getvalue(right))
+            setvalue(arrayref(left),int(left.subscript.value),line.op,right)
+        elif isinstance(left, pycparser.c_ast.StructRef):
+            setvalue(vardicts[-1][1][left.name.name][1][left.field.name],1,line.op,right)
         else:
-            setvalue(vardicts[-1][1][left.name][1],line.op,getvalue(right))
+            setvalue(vardicts[-1][1][left.name],1,line.op,right)
 
     #Incrementar/decrementar
     elif isinstance(line, pycparser.c_ast.UnaryOp):
@@ -412,37 +415,99 @@ def evalline(line):
             iterexec[-1].extend(anadido)
             iterexec[-1].rotate(len(anadido))
 
-def ArrayDecl(line,og):
-    vardicts[-1][1][line.name][1]=dict()
-    hijos=dict(i.children())
-    if "dim" in hijos:
-        vardicts[-1][1][line.name][0]=str(hijos["type"].type.names[0])+"["+str(hijos["dim"].value)+"]"
-        for j in range(int(hijos["dim"].value)):
-            posicion=line.name+"["+str(j)+"]"
-            vardicts[-1][1][line.name][1][posicion]=None
-    else:
-        vardicts[-1][1][line.name][0]=str(hijos["type"].type.names[0])
+
+
+def structs(line):
+    '''
+    Declaracion de structuras
+    
+    se utilizara una lista de diccionarios en el que la clave sera el nombre de los campos
+    '''
+    global estructuras
+    newst = dict()
+    for i in line:
+        newst[i.name] = [None,None]
+        for j in i:
+            #Asignacion de tipo
+            if isinstance(j, pycparser.c_ast.TypeDecl):
+                newst[i.name][0] = j.type.names[0]
+            #Declaracion de arrays
+            elif isinstance(j, pycparser.c_ast.ArrayDecl):
+                newst[i.name][1] = list()
+                newst[i.name][0] = arraydecl(j,newst[i.name][1])
+    estructuras[line.name]=newst
     
 
-def setvalue(left,op,right):
+
+
+def arraydecl(line,og):
+    '''
+    Declaracion de arrays, necesario para hacerlos multidimensionales
+    
+    TODO: inicializar los arrays => int x[]={1,2}
+    '''
+    global vardicts
+    for i in range(int(line.dim.value)):
+        if isinstance(line.type, pycparser.c_ast.ArrayDecl):
+            og.append([])
+            retorno = arraydecl(line.type,og[i])
+        else:
+            og.append(None)
+            retorno = line.type.type.names[0]
+    retorno += "["+ line.dim.value +"]"
+    return retorno
+
+
+
+def initlist(line,og):
+    '''
+    Inicializa los valores de un array
+    
+    TODO: inicializar los arrays => int x[]={1,2}
+    '''
+    global vardicts
+    n=0
+    for i in line:
+        if isinstance(i, pycparser.c_ast.InitList):
+            initlist(i,og[n])
+        else:
+            og[n]=getvalue(i)
+        n+=1
+
+
+def arrayref(line):
+    '''
+    tomar la referencia de un array
+    '''
+    global vardicts
+    if isinstance(line.name, pycparser.c_ast.ArrayRef):
+        return arrayref(line.name)[int(line.name.subscript.value)]
+    return vardicts[-1][1][line.name.name][1]
+
+
+
+def setvalue(left,index,op,right):
     '''
     Asigna un valor a una variable
     
     a     =   18
     ^     ^   ^
     left  op  right
+    
+    la variable index pasada por cabecera se utiliza porque las variables de tipos primitivos son inmutables y si paso una lista me permite modificar su valor
     '''
     if '+' in op:
-        left += getvalue(right)
+        left[index] += getvalue(right)
     elif '-' in op:
-        left -= getvalue(right)
+        left[index] -= getvalue(right)
     elif '*' in op:
-        left *= getvalue(right)
+        left[index] *= getvalue(right)
     elif '/' in op:
-        left /= getvalue(right)
+        left[index] /= getvalue(right)
     else:
-        left = getvalue(right)
-    
+        left[index] = getvalue(right)
+
+
     
 def getvalue(line):
     '''
@@ -464,8 +529,11 @@ def getvalue(line):
         return binary(line)
     elif isinstance(line, pycparser.c_ast.ID):
         return copy.copy(vardicts[-1][1][line.name][1])
-    
-    
+    elif isinstance(line, pycparser.c_ast.ArrayRef):
+        return copy.copy(arrayref(line)[int(line.subscript.value)])
+
+
+
 def unary(line):
     '''
     reliza operaciones con un solo operando como puede ser a++ o -b
@@ -603,6 +671,7 @@ def editado(texto):
     '''
     global saved
     global compiled
+    code.tag_delete("err")
     savebutton.config(state=NORMAL)
     compilebutton.config(state=NORMAL)
     saved = False
