@@ -1,86 +1,27 @@
 \capitulo{3}{Conceptos teóricos}
 
-En aquellos proyectos que necesiten para su comprensión y desarrollo de unos conceptos teóricos de una determinada materia o de un determinado dominio de conocimiento, debe existir un apartado que sintetice dichos conceptos.
+\begin{description}
+    \item[Compilador]: un compilador es un traductor que se encarga de convertir el código fuente a código máquina para poder ser entendido por una maquina
+    
+    \item[Interprete]: a diferencia de los compiladores que traducen todo el código de un vez, los interpretes, van convirtiendo el código poco a poco, linea a linea, instrucción a instrucción, etc.
+    
+    \item[Lexer o analizador léxico]: el lexer analiza una secuencia de caracteres y la convierte en una secuencia de tokens, por ejemplo: a = 2 + 6. El lexer lo traduciría como: 
+    \begin{enumerate}
+        \item identificador [a]
+        \item operador de asignación [=]
+        \item constante numérica [2]
+        \item operador de suma [+]
+        \item constante numérica [6]
+    \end{enumerate}
+    
+    \item[Parser o analizador sintáctico]: agrupa los token resultados del lexer formando frases gramaticales que posteriormente serán analizadas por el compilador. Utilizando el ejemplo visto con el lexer (a = 2 + 6), así quedaría con el parser:
+    
+    \Tree [.{operación de asignación} {ID a} {op =} [.{operación suma} {num 2} {op +} {num 6} ] ]
+\end{description}
+
+
+\footnote{Definiciones extraídas del libro: Jiménez Millán, José Antonio. (2014). Compiladores y procesadores del lenguaje. Cádiz, España: Servicio de Publicaciones de la Universidad de Cádiz.}
 
 Algunos conceptos teóricos de \LaTeX \footnote{Créditos a los proyectos de Álvaro López Cantero: Configurador de Presupuestos y Roberto Izquierdo Amo: PLQuiz}.
 
-\section{Secciones}
 
-Las secciones se incluyen con el comando section.
-
-\subsection{Subsecciones}
-
-Además de secciones tenemos subsecciones.
-
-\subsubsection{Subsubsecciones}
-
-Y subsecciones. 
-
-
-\section{Referencias}
-
-Las referencias se incluyen en el texto usando cite \cite{wiki:latex}. Para citar webs, artículos o libros \cite{koza92}.
-
-
-\section{Imágenes}
-
-Se pueden incluir imágenes con los comandos standard de \LaTeX, pero esta plantilla dispone de comandos propios como por ejemplo el siguiente:
-
-\imagen{escudoInfor}{Autómata para una expresión vacía}
-
-
-
-\section{Listas de items}
-
-Existen tres posibilidades:
-
-\begin{itemize}
-	\item primer item.
-	\item segundo item.
-\end{itemize}
-
-\begin{enumerate}
-	\item primer item.
-	\item segundo item.
-\end{enumerate}
-
-\begin{description}
-	\item[Primer item] más información sobre el primer item.
-	\item[Segundo item] más información sobre el segundo item.
-\end{description}
-	
-\begin{itemize}
-\item 
-\end{itemize}
-
-\section{Tablas}
-
-Igualmente se pueden usar los comandos específicos de \LaTeX o bien usar alguno de los comandos de la plantilla.
-
-\tablaSmall{Herramientas y tecnologías utilizadas en cada parte del proyecto}{l c c c c}{herramientasportipodeuso}
-{ \multicolumn{1}{l}{Herramientas} & App AngularJS & API REST & BD & Memoria \\}{ 
-HTML5 & X & & &\\
-CSS3 & X & & &\\
-BOOTSTRAP & X & & &\\
-JavaScript & X & & &\\
-AngularJS & X & & &\\
-Bower & X & & &\\
-PHP & & X & &\\
-Karma + Jasmine & X & & &\\
-Slim framework & & X & &\\
-Idiorm & & X & &\\
-Composer & & X & &\\
-JSON & X & X & &\\
-PhpStorm & X & X & &\\
-MySQL & & & X &\\
-PhpMyAdmin & & & X &\\
-Git + BitBucket & X & X & X & X\\
-Mik\TeX{} & & & & X\\
-\TeX{}Maker & & & & X\\
-Astah & & & & X\\
-Balsamiq Mockups & X & & &\\
-VersionOne & X & X & X & X\\
-} 
-
-
-Hablar de lo que es un depurador y un compilador y un parser
