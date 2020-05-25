@@ -7,6 +7,7 @@ Este es un archivo temporal
 
 from os import system
 import subprocess
+import difflib
 from subprocess import Popen
 from subprocess import check_output
 #import gdb
@@ -289,11 +290,16 @@ def nextline():
     except IndexError:
         try:
             iterexec.pop()
+            vardicts.pop()
+            nextline()
         except IndexError:
             code.tag_delete("exe")
             nextbutton.config(state=DISABLED)
-            adv = Tk()
+            adv = Toplevel(root)
             adv.title("Advertencia")
+            adv.focus_set()
+            adv.grab_set()
+            adv.transient(master=root)
             textframe = Frame(adv)
             textframe.pack( side = TOP )
             textlabel = Label(textframe, text="Ejecucion finalizada", height=10, width=50)
@@ -313,11 +319,31 @@ def nextline():
                 if isinstance(k[1],dict):
                     var = str(j) + ": "+ str(k[0])+"\n"
                     for m, n in k[1].items():
-                        var+=str(m) + ": "+ str(n)+"\n"
+                        var+="->"
+                        if 'char' in n[0]:
+                            var+=str(m) + ": " + n[0] + ": "
+                            for l in range(len(n[1])):
+                                if n[1][l] is None:
+                                    if l == 0:
+                                        var+="#VALUE!"
+                                    break
+                                else:
+                                    var+=n[1][l]
+                            var+="\n"
+                        else:
+                            if n[1] is None:
+                                var+=str(m) + ": " + n[0] + ": #VALUE!"
+                            else:
+                                var+=str(m) + ": "+ n[0] + ": "+ str(n[1])
+                            var+="\n"
                 else:
-                    var = str(j) + ": "+ str(k)
+                    if k[1] is None:
+                        var = str(j) + ": "+ k[0] + ": #VALUE!"
+                    else:
+                        var = str(j) + ": "+ k[0] + ": " + str(k[1])
                 variables.insert(tkinter.END, var)
                 variables.insert(tkinter.END, '\n')
+            variables.insert(tkinter.END, '\n')
         variables.config(state=DISABLED)
             
         
@@ -328,6 +354,8 @@ def evalline(line):
     '''
     global vardicts
     global estructuras
+    global funciones
+    global iterexec
     #Declaracion de variables/constantes
     if isinstance(line, pycparser.c_ast.Decl):
         vardicts[-1][1][line.name] = [None,None]
@@ -336,9 +364,13 @@ def evalline(line):
             if isinstance(i, pycparser.c_ast.TypeDecl):
                 if isinstance(i.type, pycparser.c_ast.Struct):
                     vardicts[-1][1][line.name][0] = i.type.name+"(Struct)"
-                    vardicts[-1][1][line.name][1] = copy.copy(estructuras[i.type.name])
+                    vardicts[-1][1][line.name][1] = copy.deepcopy(estructuras[i.type.name])
                 else:
                     vardicts[-1][1][line.name][0] = i.type.names[0]
+            
+            #Igualar a retorno de funcion
+            elif isinstance(i, pycparser.c_ast.FuncCall):
+                funccall(i,vardicts[-1][1][line.name])
                 
             #Declaracion de arrays
             elif isinstance(i, pycparser.c_ast.ArrayDecl):
@@ -414,6 +446,38 @@ def evalline(line):
             iterexec[-1].appendleft(line)
             iterexec[-1].extend(anadido)
             iterexec[-1].rotate(len(anadido))
+    
+    #Llamadas a funciones
+    elif isinstance(line, pycparser.c_ast.FuncCall):
+        funccall(line)
+        
+    #Return
+    elif isinstance(line, pycparser.c_ast.Return):
+        print(line)
+        vardicts[-1][1]["retorno"][1]=getvalue(line.expr)
+        
+                
+
+
+def funccall(line,retorno=None):
+    '''
+    Llamadas a funciones
+    '''
+    if line.name.name in funciones:
+        cabecera = dict()
+        for i in range(len(funciones[line.name.name].decl.type.args.params)):
+            cabecera[funciones[line.name.name].decl.type.args.params[i].name] = copy.copy(vardicts[-1][1][line.args.exprs[i].name])
+        iterexec.append(deque(funciones[line.name.name].body))
+        vardicts.append([line.name.name,cabecera])
+        if retorno is not None:
+            vardicts[-1][1]["retorno"] = [None,None]
+            vardicts[-1][1]["retorno"][0]=retorno[0]
+            vardicts[-1][1]["retorno"][1]=retorno[1]
+    elif "strcpy" == line.name.name:
+        rstring = line.args.exprs[1].value
+        lstring = vardicts[-1][1][line.args.exprs[0].name.name][1][line.args.exprs[0].field.name][1]
+        for i in range(len(rstring[1:-1])):
+            lstring[i]=rstring[i+1]
 
 
 
@@ -482,6 +546,8 @@ def arrayref(line):
     global vardicts
     if isinstance(line.name, pycparser.c_ast.ArrayRef):
         return arrayref(line.name)[int(line.name.subscript.value)]
+    if isinstance(line.name, pycparser.c_ast.StructRef):
+        return vardicts[-1][1][line.name.name.name][1][line.name.field.name][1]
     return vardicts[-1][1][line.name.name][1]
 
 
@@ -663,6 +729,9 @@ def debugoff():
     nextbutton.config(state=DISABLED)
     code.config(state=NORMAL)
     code.tag_delete("exe")
+    variables.config(state=NORMAL)
+    variables.delete(1.0,END)
+    variables.config(state=DISABLED)
     debugbutton.config(text="Acceder al modo debug", command=debugon)
 
 def editado(texto):

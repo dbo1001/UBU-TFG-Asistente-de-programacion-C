@@ -14,3 +14,8 @@ int main(){
 	printf("Sumatorio: %d\n",sumatorio);
 	return 0;
 }
+
+
+
+
+

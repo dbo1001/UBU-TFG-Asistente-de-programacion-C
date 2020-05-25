@@ -18,3 +18,17 @@ int main(){
 	printf("%d %d %d %d %d %d\n", a, b, c, d ,e, f);
 	return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

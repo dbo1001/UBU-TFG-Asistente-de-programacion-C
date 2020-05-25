@@ -13,3 +13,11 @@ int main(){
 	printf("%d %d\n", c, d);
 	return 0;
 }
+
+
+
+
+
+
+
+
