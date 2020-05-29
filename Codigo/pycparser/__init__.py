@@ -15,7 +15,7 @@ from subprocess import check_output
 from .c_parser import CParser
 
 
-def preprocess_file(filename, cpp_path='cpp', cpp_args='-D _STDARG_H'):
+def preprocess_file(filename, cpp_path='cpp', cpp_args=''):
     """ Preprocess a file using cpp.
 
         filename:
@@ -48,7 +48,7 @@ def preprocess_file(filename, cpp_path='cpp', cpp_args='-D _STDARG_H'):
     return text
 
 
-def parse_file(filename, use_cpp=False, cpp_path='cpp', cpp_args='',
+def parse_file(filename, use_cpp=False, cpp_path='cpp', cpp_args='-d stdarg.h',
                parser=None):
     """ Parse a C file using pycparser.
 
@@ -83,10 +83,15 @@ def parse_file(filename, use_cpp=False, cpp_path='cpp', cpp_args='',
         text = preprocess_file(filename, cpp_path, cpp_args)
     else:
         with io.open(filename) as f:
-            text = f.read()
-    while "#include" in text:
-        EOL=text.find("\n")
-        text=text[EOL+1:]
+            readed = f.read()
+    text=''
+    for i in readed.split('\n'):
+        if "#include" in i:
+            i=''
+        if "//" in i:
+            j = i.find("//")
+            i = i[:j]
+        text = text + i + '\n'
     if parser is None:
         parser = CParser()
     print(text)

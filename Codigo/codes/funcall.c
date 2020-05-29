@@ -1,7 +1,7 @@
 #include <stdio.h>
-
+//funcionan los comentarios??
 void suma (int x, int y);
-
+//veremos
 int resta (int a, int b);
  
 int main () {
@@ -21,5 +21,6 @@ void suma (int x, int y){
 int resta (int a, int b){
 	return a - b;
 }
+
 
 

@@ -215,7 +215,6 @@ def debugon():
     global funciones
     global iterexec
     global vardicts
-    global nlib
     global estructuras
     try:
         if not compiled:
@@ -232,7 +231,7 @@ def debugon():
     else:
         estructuras = dict()
         funciones = dict()
-        parser = pycparser.parse_file(filename,use_cpp=False)
+        parser = pycparser.parse_file(filename)
         iterar = iter(parser)
         try:
             while(True):
@@ -246,8 +245,6 @@ def debugon():
                     nombre = getattr(next(iter(siguiente)),'name')
                     funciones[nombre]=siguiente
         except StopIteration:
-            texto = code.get(1.0, END)
-            nlib = texto.count("#include")
             #Reutilizo el mismo boton para entrar y salir del modo debug
             debugbutton.config(text="Salir del modo debug", command=debugoff)
             #Deshabilitamos los botones que no vamos a usar durante el debuggueo
@@ -268,7 +265,6 @@ def nextline():
     le va pasando por cabecera las lineas del codigo en formato tabla ast
     '''
     global vardicts
-    global nlib
     try:
         line = iterexec[-1].popleft()
         
@@ -278,8 +274,8 @@ def nextline():
         pos = numline.find(":")
         numline=numline[:pos]
         
-        inicio=str(float(numline)+nlib)
-        fin=str(float(numline)+1+nlib)
+        inicio=str(float(numline))
+        fin=str(float(numline)+1)
         #pinta de color azul la linea ejecutada
         code.tag_delete("exe")
         code.tag_add("exe",inicio,fin)
@@ -471,8 +467,24 @@ def funccall(line,retorno=None):
         vardicts.append([line.name.name,cabecera])
         if retorno is not None:
             vardicts[-1][1]["retorno"] = [None,None]
-            vardicts[-1][1]["retorno"][0]=retorno[0]
-            vardicts[-1][1]["retorno"][1]=retorno[1]
+            vardicts[-1][1]["retorno"] = retorno
+    elif "printf" == line.name.name:
+        consola.config(state=NORMAL)
+        i=1
+        imprimir = line.args.exprs[0].value[1:-1]
+        while '%' in imprimir:
+            position = imprimir.find('%')
+            imprimir = imprimir[:position] + str(getvalue(line.args.exprs[i])) + imprimir[position+2:]
+            i+=1
+        while '\\n' in imprimir:
+            position = imprimir.find('\\n')
+            consola.insert(tkinter.END, imprimir[:position])
+            consola.insert(tkinter.END, '\n')
+            imprimir = imprimir[position+2:]
+        consola.insert(tkinter.END, imprimir)
+        consola.config(state=DISABLED)
+    elif "scanf" == line.name.name:
+        scanf(line)
     elif "strcpy" == line.name.name:
         rstring = line.args.exprs[1].value
         lstring = vardicts[-1][1][line.args.exprs[0].name.name][1][line.args.exprs[0].field.name][1]
@@ -481,6 +493,61 @@ def funccall(line,retorno=None):
 
 
 
+def scanf(line):
+    def escanear():
+        value.value=valueentry.get()
+        scan.destroy()
+        asignacion = pycparser.c_ast.Assignment("=",line.args.exprs[1],value)
+        try:
+            evalline(asignacion)
+        except ValueError:
+            debugoff()
+            error = Toplevel(root)
+            error.title("errorertencia")
+            error.focus_set()
+            error.grab_set()
+            error.transient(master=root)
+            textframe = Frame(error)
+            textframe.pack( side = TOP )
+            textlabel = Label(textframe, text="Valor introducido no valido", height=10, width=50)
+            textlabel.pack( side = LEFT)
+            aceptframe = Frame(error)
+            aceptframe.pack( side = BOTTOM )
+            aceptbutton = Button(aceptframe, text="Aceptar",command=error.destroy)
+            aceptbutton.pack( side = LEFT)
+        else:
+            nextbutton.config(state=NORMAL)
+    value = pycparser.c_ast.Constant(None,None)
+    if "d" in line.args.exprs[0].value:
+        value.type='int'
+    elif "f" in line.args.exprs[0].value:
+        value.type='double'
+    elif "c" in line.args.exprs[0].value:
+        value.type='char'
+    elif "s" in line.args.exprs[0].value:
+        value.type='string'
+    nextbutton.config(state=DISABLED)
+    scan = Toplevel(root)
+    scan.focus_set()
+    scan.grab_set()
+    scan.transient(master=root)
+    scan.title("Escanear valor")
+    textframe = Frame(scan)
+    textframe.pack(side = TOP)
+    textlabel = Label(textframe, text="Introduce el valor adecuado", height=4, width=50)
+    textlabel.pack(side = LEFT)
+    valueframe = Frame(scan)
+    valueframe.pack(side = TOP)
+    valueentry = Entry(valueframe)
+    valueentry.pack(side = LEFT)
+    buttonframe = Frame(scan)
+    buttonframe.pack(side = BOTTOM)
+    aceptbutton = Button(buttonframe, text="Aceptar", command=escanear)
+    aceptbutton.pack()
+    
+    
+    
+    
 def structs(line):
     '''
     Declaracion de structuras
@@ -597,6 +664,8 @@ def getvalue(line):
         return copy.copy(vardicts[-1][1][line.name][1])
     elif isinstance(line, pycparser.c_ast.ArrayRef):
         return copy.copy(arrayref(line)[int(line.subscript.value)])
+    elif isinstance(line, pycparser.c_ast.StructRef):
+        return copy.copy(vardicts[-1][1][line.name.name][1][line.field.name][1])
 
 
 
