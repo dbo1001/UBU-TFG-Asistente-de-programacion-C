@@ -304,6 +304,9 @@ def nextline():
             aceptframe.pack( side = BOTTOM )
             aceptbutton = Button(aceptframe, text="Aceptar",command=adv.destroy)
             aceptbutton.pack( side = LEFT)
+    except FuncCallError:
+        print(line)
+        iterexec[-2].appendleft(line)
     finally:
         #Imprimimos las variables
         variables.config(state=NORMAL)
@@ -503,7 +506,7 @@ def scanf(line):
         except ValueError:
             debugoff()
             error = Toplevel(root)
-            error.title("errorertencia")
+            error.title("Advertencia")
             error.focus_set()
             error.grab_set()
             error.transient(master=root)
@@ -518,6 +521,7 @@ def scanf(line):
         else:
             nextbutton.config(state=NORMAL)
     value = pycparser.c_ast.Constant(None,None)
+    #conversion de tipos
     if "d" in line.args.exprs[0].value:
         value.type='int'
     elif "f" in line.args.exprs[0].value:
@@ -526,6 +530,7 @@ def scanf(line):
         value.type='char'
     elif "s" in line.args.exprs[0].value:
         value.type='string'
+    #Ventana emergente que solicita la introduccion de una variable para el scan
     nextbutton.config(state=DISABLED)
     scan = Toplevel(root)
     scan.focus_set()
@@ -674,9 +679,17 @@ def unary(line):
     reliza operaciones con un solo operando como puede ser a++ o -b
     '''
     global vardicts
-    son = next(iter(line))
-    if isinstance(son, pycparser.c_ast.ID):
-        variable = son.name
+    if isinstance(line.expr, pycparser.c_ast.FuncCall):
+        line.expr=pycparser.c_ast.Constant(None,None)
+        cabecera = dict()
+        for i in range(len(funciones[line.name.name].decl.type.args.params)):
+            cabecera[funciones[line.name.name].decl.type.args.params[i].name] = copy.copy(vardicts[-1][1][line.args.exprs[i].name])
+        iterexec.append(deque(funciones[line.name.name].body))
+        vardicts.append([line.name.name,cabecera])
+        raise FuncCallError()
+        
+    elif isinstance(line.expr, pycparser.c_ast.ID):
+        variable = line.expr.name
         retorno = copy.copy(vardicts[-1][1][variable][1])
         #aumentar
         if "++" in line.op:
@@ -693,18 +706,8 @@ def unary(line):
         #Ejemplo y=--x o y=++x
         else:
             return copy.copy(vardicts[-1][1][variable][1])
-            
-    elif isinstance(son, pycparser.c_ast.Constant):
-        if "int" in son.type:
-            return int(son.value)*-1
-        elif "double" in son.type:
-            return float(son.value)*-1
-            
-    elif isinstance(son, pycparser.c_ast.BinaryOp):
-        return binary(son)*-1
-        
-    elif isinstance(son, pycparser.c_ast.UnaryOp):
-        return unary(son)*-1
+
+    return getvalue(line.expr)*-1
         
 def binary(line):
     '''
@@ -715,24 +718,32 @@ def binary(line):
     '''
     global vardicts
     operandos = list()
+    
     #Obtencion de los operandos
-    for son in line:
-        if isinstance(son, pycparser.c_ast.ID):
-            variable = son.name
-            operandos.append(copy.copy(vardicts[-1][1][variable][1]))
-                
-        elif isinstance(son, pycparser.c_ast.Constant):
-            if "int" in son.type:
-                operandos.append(int(son.value))
-            elif "double" in son.type:
-                operandos.append(float(son.value))
-                
-        elif isinstance(son, pycparser.c_ast.BinaryOp):
-            operandos.append(binary(son))
-            
-        elif isinstance(son, pycparser.c_ast.UnaryOp):
-            operandos.append(unary(son))
-            
+    
+    if isinstance(line.left, pycparser.c_ast.FuncCall):
+        funcion=copy.deepcopy(line.left)
+        line.left=pycparser.c_ast.Constant(None,None)
+        line.left.type=funciones[funcion.name.name].decl.type.type.type.names[0]
+        cabecera = dict()
+        for i in range(len(funciones[funcion.name.name].decl.type.args.params)):
+            cabecera[funciones[funcion.name.name].decl.type.args.params[i].name] = [funciones[funcion.name.name].decl.type.args.params[i].type.type.names[0],getvalue(funcion.args.exprs[i])]
+        iterexec.append(deque(funciones[funcion.name.name].body))
+        vardicts.append([funcion.name.name,cabecera])
+        raise FuncCallError()
+    if isinstance(line.right, pycparser.c_ast.FuncCall):
+        funcion=copy.deepcopy(line.right)
+        line.right=pycparser.c_ast.Constant(None,None)
+        line.right.type=funciones[funcion.name.name].decl.type.type.type.names[0]
+        cabecera = dict()
+        for i in range(len(funciones[funcion.name.name].decl.type.args.params)):
+            cabecera[funciones[funcion.name.name].decl.type.args.params[i].name] = [funciones[funcion.name.name].decl.type.args.params[i].type.type.names[0],getvalue(funcion.args.exprs[i])]
+        iterexec.append(deque(funciones[funcion.name.name].body))
+        vardicts.append([funcion.name.name,cabecera])
+        raise FuncCallError()
+    operandos.append(getvalue(line.left))
+    operandos.append(getvalue(line.right))
+    
     #Operaciones llevadas a cabo
     
     #suma
@@ -787,7 +798,12 @@ def binary(line):
         return int(operandos[0] > operandos[1])
     
                             
-    
+
+class FuncCallError(Exception):
+    pass
+
+
+
 def debugoff():
     '''
     Sale del modo debug
