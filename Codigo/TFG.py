@@ -216,6 +216,7 @@ def debugon():
     global iterexec
     global vardicts
     global estructuras
+    global retornos
     try:
         if not compiled:
             consola.config(state=NORMAL)
@@ -254,9 +255,10 @@ def debugon():
             nextbutton.config(state=NORMAL)
             code.config(state=DISABLED)
             iterexec = list()
-            iterexec.append(deque(dict(funciones['main'].children())['body']))
+            iterexec.append(copy.deepcopy(deque(dict(funciones['main'].children())['body'])))
             vardicts = list()
             vardicts.append(["main",dict()])
+            retornos = deque()
                 
 
 def nextline():
@@ -355,6 +357,7 @@ def evalline(line):
     global estructuras
     global funciones
     global iterexec
+    global retornos
     #Declaracion de variables/constantes
     if isinstance(line, pycparser.c_ast.Decl):
         vardicts[-1][1][line.name] = [None,None]
@@ -369,7 +372,16 @@ def evalline(line):
             
             #Igualar a retorno de funcion
             elif isinstance(i, pycparser.c_ast.FuncCall):
-                funccall(i,vardicts[-1][1][line.name])
+                funcion=copy.deepcopy(i)
+                line.init=pycparser.c_ast.Constant(None,None)
+                line.init.type=funciones[funcion.name.name].decl.type.type.type.names[0]
+                cabecera = dict()
+                for j in range(len(funciones[funcion.name.name].decl.type.args.params)):
+                    cabecera[funciones[funcion.name.name].decl.type.args.params[j].name] = [funciones[funcion.name.name].decl.type.args.params[j].type.type.names[0],getvalue(funcion.args.exprs[j])]
+                iterexec.append(copy.deepcopy(deque(funciones[funcion.name.name].body)))
+                vardicts.append([funcion.name.name,cabecera])
+                retornos.append(line.init)
+                raise FuncCallError()   
                 
             #Declaracion de arrays
             elif isinstance(i, pycparser.c_ast.ArrayDecl):
@@ -386,15 +398,24 @@ def evalline(line):
 
     #Asignacion de valores
     elif isinstance(line, pycparser.c_ast.Assignment):
-        partes = iter(line)
-        left = next(partes)
-        right = next(partes)
-        if isinstance(left, pycparser.c_ast.ArrayRef):
-            setvalue(arrayref(left),int(left.subscript.value),line.op,right)
-        elif isinstance(left, pycparser.c_ast.StructRef):
-            setvalue(vardicts[-1][1][left.name.name][1][left.field.name],1,line.op,right)
+        if isinstance(line.rvalue, pycparser.c_ast.FuncCall):
+            funcion=copy.deepcopy(line.rvalue)
+            line.rvalue=pycparser.c_ast.Constant(None,None)
+            line.rvalue.type=funciones[funcion.name.name].decl.type.type.type.names[0]
+            cabecera = dict()
+            for i in range(len(funciones[funcion.name.name].decl.type.args.params)):
+                cabecera[funciones[funcion.name.name].decl.type.args.params[i].name] = [funciones[funcion.name.name].decl.type.args.params[i].type.type.names[0],getvalue(funcion.args.exprs[i])]
+            iterexec.append(copy.deepcopy(deque(funciones[funcion.name.name].body)))
+            vardicts.append([funcion.name.name,cabecera])
+            retornos.append(line.rvalue)
+            raise FuncCallError()
+            
+        if isinstance(line.lvalue, pycparser.c_ast.ArrayRef):
+            setvalue(arrayref(line.lvalue),int(line.lvalue.subscript.value),line.op,line.rvalue)
+        elif isinstance(line.lvalue, pycparser.c_ast.StructRef):
+            setvalue(vardicts[-1][1][line.lvalue.name.name][1][line.lvalue.field.name],1,line.op,line.rvalue)
         else:
-            setvalue(vardicts[-1][1][left.name],1,line.op,right)
+            setvalue(vardicts[-1][1][line.lvalue.name],1,line.op,line.rvalue)
 
     #Incrementar/decrementar
     elif isinstance(line, pycparser.c_ast.UnaryOp):
@@ -452,8 +473,9 @@ def evalline(line):
         
     #Return
     elif isinstance(line, pycparser.c_ast.Return):
-        print(line)
-        vardicts[-1][1]["retorno"][1]=getvalue(line.expr)
+        retornos.pop().value=getvalue(line.expr)
+        iterexec.pop()
+        vardicts.pop()
         
                 
 
@@ -466,11 +488,8 @@ def funccall(line,retorno=None):
         cabecera = dict()
         for i in range(len(funciones[line.name.name].decl.type.args.params)):
             cabecera[funciones[line.name.name].decl.type.args.params[i].name] = copy.copy(vardicts[-1][1][line.args.exprs[i].name])
-        iterexec.append(deque(funciones[line.name.name].body))
+        iterexec.append(copy.deepcopy(deque(funciones[line.name.name].body)))
         vardicts.append([line.name.name,cabecera])
-        if retorno is not None:
-            vardicts[-1][1]["retorno"] = [None,None]
-            vardicts[-1][1]["retorno"] = retorno
     elif "printf" == line.name.name:
         consola.config(state=NORMAL)
         i=1
@@ -680,12 +699,15 @@ def unary(line):
     '''
     global vardicts
     if isinstance(line.expr, pycparser.c_ast.FuncCall):
+        funcion=copy.deepcopy(line.expr)
         line.expr=pycparser.c_ast.Constant(None,None)
+        line.expr.type=funciones[funcion.name.name].decl.type.type.type.names[0]
         cabecera = dict()
-        for i in range(len(funciones[line.name.name].decl.type.args.params)):
-            cabecera[funciones[line.name.name].decl.type.args.params[i].name] = copy.copy(vardicts[-1][1][line.args.exprs[i].name])
-        iterexec.append(deque(funciones[line.name.name].body))
-        vardicts.append([line.name.name,cabecera])
+        for i in range(len(funciones[funcion.name.name].decl.type.args.params)):
+            cabecera[funciones[funcion.name.name].decl.type.args.params[i].name] = [funciones[funcion.name.name].decl.type.args.params[i].type.type.names[0],getvalue(funcion.args.exprs[i])]
+        iterexec.append(copy.deepcopy(deque(funciones[funcion.name.name].body)))
+        vardicts.append([funcion.name.name,cabecera])
+        retornos.append(line.expr)
         raise FuncCallError()
         
     elif isinstance(line.expr, pycparser.c_ast.ID):
@@ -717,6 +739,7 @@ def binary(line):
     ej: 3 + 5 + 7 => binary(binary(3,+,5),+,7)
     '''
     global vardicts
+    global retornos
     operandos = list()
     
     #Obtencion de los operandos
@@ -728,8 +751,9 @@ def binary(line):
         cabecera = dict()
         for i in range(len(funciones[funcion.name.name].decl.type.args.params)):
             cabecera[funciones[funcion.name.name].decl.type.args.params[i].name] = [funciones[funcion.name.name].decl.type.args.params[i].type.type.names[0],getvalue(funcion.args.exprs[i])]
-        iterexec.append(deque(funciones[funcion.name.name].body))
+        iterexec.append(copy.deepcopy(deque(funciones[funcion.name.name].body)))
         vardicts.append([funcion.name.name,cabecera])
+        retornos.append(line.left)
         raise FuncCallError()
     if isinstance(line.right, pycparser.c_ast.FuncCall):
         funcion=copy.deepcopy(line.right)
@@ -738,8 +762,9 @@ def binary(line):
         cabecera = dict()
         for i in range(len(funciones[funcion.name.name].decl.type.args.params)):
             cabecera[funciones[funcion.name.name].decl.type.args.params[i].name] = [funciones[funcion.name.name].decl.type.args.params[i].type.type.names[0],getvalue(funcion.args.exprs[i])]
-        iterexec.append(deque(funciones[funcion.name.name].body))
+        iterexec.append(copy.deepcopy(deque(funciones[funcion.name.name].body)))
         vardicts.append([funcion.name.name,cabecera])
+        retornos.append(line.right)
         raise FuncCallError()
     operandos.append(getvalue(line.left))
     operandos.append(getvalue(line.right))
