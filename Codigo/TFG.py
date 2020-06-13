@@ -5,17 +5,17 @@ Editor de Spyder
 Este es un archivo temporal
 """
 
-from os import system
+#from os import system
 import subprocess
-import difflib
-from subprocess import Popen
+#import difflib
+#from subprocess import Popen
 from subprocess import check_output
 #import gdb
-import shlex
+#import shlex
 import tkinter
 import copy
-import re
-from itertools import tee
+#import re
+#from itertools import tee
 from collections import deque
 from tkinter import *
 from tkinter import filedialog
@@ -33,7 +33,7 @@ def nuevo():
     texto=None
     global filename
     filename=None
-    code.delete(1.0,END)
+    code.delete(1.0,tkinter.END)
     global saved
     saved = True
     global compiled
@@ -49,22 +49,22 @@ def abrir():
         get_file()
         file = open(filename, mode= 'r')
         texto = file.read()
-        code.delete(1.0,END)
+        code.delete(1.0,tkinter.END)
         code.insert(tkinter.END, texto)
         file.close()
-        savebutton.config(state=DISABLED)
+        savebutton.config(state=tkinter.DISABLED)
         compiled = False
     except NameError:   
-        adv = Tk()
+        adv = tkinter.Tk()
         adv.title("Advertencia")
-        textframe = Frame(adv)
-        textframe.pack( side = TOP )
-        textlabel = Label(textframe, text="No has seleccionado ningun archivo")
-        textlabel.pack( side = LEFT)
-        aceptframe = Frame(adv)
-        aceptframe.pack( side = BOTTOM )
-        aceptbutton = Button(aceptframe, text="Aceptar",command=adv.destroy)
-        aceptbutton.pack( side = LEFT)
+        textframe = tkinter.Frame(adv)
+        textframe.pack( side = tkinter.TOP )
+        textlabel = tkinter.Label(textframe, text="No has seleccionado ningun archivo")
+        textlabel.pack( side = tkinter.LEFT)
+        aceptframe = tkinter.Frame(adv)
+        aceptframe.pack( side = tkinter.BOTTOM )
+        aceptbutton = tkinter.Button(aceptframe, text="Aceptar",command=adv.destroy)
+        aceptbutton.pack( side = tkinter.LEFT)
         
         
         
@@ -80,10 +80,10 @@ def guardar():
         guardar_como()
     else:
         file = open(filename, mode= 'w+')
-        texto = code.get(1.0, END)
+        texto = code.get(1.0, tkinter.END)
         file.write(texto)
         file.close()
-        savebutton.config(state=DISABLED)
+        savebutton.config(state=tkinter.DISABLED)
         saved = True
         
 def guardar_como():
@@ -96,22 +96,22 @@ def guardar_como():
     try:
         get_file()
         file = open(filename, mode= 'w+')
-        texto = code.get(1.0, END)
+        texto = code.get(1.0, tkinter.END)
         file.write(texto)
         file.close()
-        savebutton.config(state=DISABLED)
+        savebutton.config(state=tkinter.DISABLED)
         saved = True  
     except NameError:
-        adv = Tk()
+        adv = tkinter.Tk()
         adv.title("Advertencia")
-        textframe = Frame(adv)
-        textframe.pack( side = TOP )
-        textlabel = Label(textframe, text="No has seleccionado ningun archivo")
-        textlabel.pack( side = LEFT)
-        aceptframe = Frame(adv)
-        aceptframe.pack( side = BOTTOM )
-        aceptbutton = Button(aceptframe, text="Aceptar",command=adv.destroy)
-        aceptbutton.pack( side = LEFT)
+        textframe = tkinter.Frame(adv)
+        textframe.pack( side = tkinter.TOP )
+        textlabel = tkinter.Label(textframe, text="No has seleccionado ningun archivo")
+        textlabel.pack( side = tkinter.LEFT)
+        aceptframe = tkinter.Frame(adv)
+        aceptframe.pack( side = tkinter.BOTTOM )
+        aceptbutton = tkinter.Button(aceptframe, text="Aceptar",command=adv.destroy)
+        aceptbutton.pack( side = tkinter.LEFT)
 
 def compilar():
     '''
@@ -129,21 +129,21 @@ def compilar():
     command = "gcc " + filename + " -g -o " + filename[:-2] + " && echo ok || echo err"
     retorno=str(check_output(command, stderr=subprocess.STDOUT, shell=True))[2:-1]
     if len(retorno) == 7:
-        consola.config(state=NORMAL)
+        consola.config(state=tkinter.NORMAL)
         consola.insert(tkinter.END, 'Compilado correctamente')
         consola.insert(tkinter.END, '\n')
-        consola.config(state=DISABLED)
-        compilebutton.config(state=DISABLED)
+        consola.config(state=tkinter.DISABLED)
+        compilebutton.config(state=tkinter.DISABLED)
         compiled=True
     else:
         #Esto es por un error que los \n los escribe como texto tal cual en vez de hacer un salto de linea
         while "\\" in retorno:
             pos=retorno.find('\\')
-            consola.config(state=NORMAL)
+            consola.config(state=tkinter.NORMAL)
             consola.insert(tkinter.END, retorno[:pos])
             if retorno[pos+1] is 'n':
                 consola.insert(tkinter.END, '\n')
-                consola.config(state=DISABLED)
+                consola.config(state=tkinter.DISABLED)
                 errorpos=retorno.find(".c:",len(filename)+2)
                 error=copy.copy(retorno[errorpos+3:])
                 errorpos=error.find(":")
@@ -170,28 +170,28 @@ def ejecutar():
     global compiled
     try:
         if not compiled:
-            consola.config(state=NORMAL)
-            consola.delete(1.0,END)
+            consola.config(state=tkinter.NORMAL)
+            consola.delete(1.0,tkinter.END)
             consola.insert(tkinter.END, 'Archivo no compilado')
             consola.insert(tkinter.END, '\n')
             consola.insert(tkinter.END, 'Compilando...')
             consola.insert(tkinter.END, '\n')
-            consola.config(state=DISABLED)
+            consola.config(state=tkinter.DISABLED)
             compilar()
     except Exception:
         print("error")
             
     else:
         command = filename[:-2] + " && echo ok || echo err"
-        p = subprocess.Popen([filename[:-2]], stdin=subprocess.PIPE)
+#        p = subprocess.Popen([filename[:-2]], stdin=subprocess.PIPE)
 
         retorno=str(check_output(command, shell=True))[2:-3]
         while "\\" in retorno:
             pos=retorno.find('\\')
-            consola.config(state=NORMAL)
+            consola.config(state=tkinter.NORMAL)
             if retorno[:pos] is 'ok':
                 consola.insert(tkinter.END, '\n')
-                consola.config(state=DISABLED)  
+                consola.config(state=tkinter.DISABLED)  
                 break
             consola.insert(tkinter.END, retorno[:pos])
             if retorno[pos+1] is 'n':
@@ -199,9 +199,9 @@ def ejecutar():
             retorno=retorno[pos+2:]
             if retorno is 'ok':
                 consola.insert(tkinter.END, '\n')
-                consola.config(state=DISABLED)  
+                consola.config(state=tkinter.DISABLED)  
                 break
-            consola.config(state=DISABLED)
+            consola.config(state=tkinter.DISABLED)
 	
 
 def debugon():
@@ -219,13 +219,13 @@ def debugon():
     global retornos
     try:
         if not compiled:
-            consola.config(state=NORMAL)
-            consola.delete(1.0,END)
+            consola.config(state=tkinter.NORMAL)
+            consola.delete(1.0,tkinter.END)
             consola.insert(tkinter.END, 'Archivo no compilado')
             consola.insert(tkinter.END, '\n')
             consola.insert(tkinter.END, 'Compilando...')
             consola.insert(tkinter.END, '\n')
-            consola.config(state=DISABLED)
+            consola.config(state=tkinter.DISABLED)
             compilar()
     except Exception:
         print("error")
@@ -247,13 +247,14 @@ def debugon():
                     funciones[nombre]=siguiente
         except StopIteration:
             #Reutilizo el mismo boton para entrar y salir del modo debug
-            debugbutton.config(text="Salir del modo debug", command=debugoff)
+            debugbutton.config(text="Salir del modo debug", command=debugoff, image=iconstop, width=30, height=30)
             #Deshabilitamos los botones que no vamos a usar durante el debuggueo
-            newbutton.config(state=DISABLED)
-            openbutton.config(state=DISABLED)
-            exebutton.config(state=DISABLED)
-            nextbutton.config(state=NORMAL)
-            code.config(state=DISABLED)
+            newbutton.config(state=tkinter.DISABLED)
+            openbutton.config(state=tkinter.DISABLED)
+            exebutton.config(state=tkinter.DISABLED)
+            nextbutton.config(state=tkinter.NORMAL)
+            stepbutton.config(state=tkinter.NORMAL)
+            code.config(state=tkinter.DISABLED)
             iterexec = list()
             iterexec.append(copy.deepcopy(deque(dict(funciones['main'].children())['body'])))
             vardicts = list()
@@ -292,27 +293,34 @@ def nextline():
             nextline()
         except IndexError:
             code.tag_delete("exe")
-            nextbutton.config(state=DISABLED)
-            adv = Toplevel(root)
+            nextbutton.config(state=tkinter.DISABLED)
+            stepbutton.config(state=tkinter.DISABLED)
+            adv = tkinter.Toplevel(root)
             adv.title("Advertencia")
             adv.focus_set()
             adv.grab_set()
             adv.transient(master=root)
-            textframe = Frame(adv)
-            textframe.pack( side = TOP )
-            textlabel = Label(textframe, text="Ejecucion finalizada", height=10, width=50)
-            textlabel.pack( side = LEFT)
-            aceptframe = Frame(adv)
-            aceptframe.pack( side = BOTTOM )
-            aceptbutton = Button(aceptframe, text="Aceptar",command=adv.destroy)
-            aceptbutton.pack( side = LEFT)
+            textframe = tkinter.Frame(adv)
+            textframe.pack( side = tkinter.TOP )
+            textlabel = tkinter.Label(textframe, text="Ejecucion finalizada", height=10, width=50)
+            textlabel.pack( side = tkinter.LEFT)
+            aceptframe = tkinter.Frame(adv)
+            aceptframe.pack( side = tkinter.BOTTOM )
+            aceptbutton = tkinter.Button(aceptframe, text="Aceptar",command=adv.destroy)
+            aceptbutton.pack( side = tkinter.LEFT)
     except FuncCallError:
-        print(line)
+#        print(line)
         iterexec[-2].appendleft(line)
+    except ReturnError:
+        while(True):
+            try:
+                iterexec[-1].pop()
+            except IndexError:
+                break
     finally:
         #Imprimimos las variables
-        variables.config(state=NORMAL)
-        variables.delete(1.0,END)
+        variables.config(state=tkinter.NORMAL)
+        variables.delete(1.0,tkinter.END)
         for i in vardicts:
             variables.insert(tkinter.END, str(i[0]))
             variables.insert(tkinter.END, '\n')
@@ -345,10 +353,18 @@ def nextline():
                 variables.insert(tkinter.END, var)
                 variables.insert(tkinter.END, '\n')
             variables.insert(tkinter.END, '\n')
-        variables.config(state=DISABLED)
+        variables.config(state=tkinter.DISABLED)
             
         
 
+def skip():
+    fin = len(iterexec)
+    nextline()
+    while(len(iterexec) > fin):
+        nextline()
+    
+    
+    
 def evalline(line):
     '''
     Analiza la linea que se le pasa por cabecera
@@ -361,54 +377,42 @@ def evalline(line):
     #Declaracion de variables/constantes
     if isinstance(line, pycparser.c_ast.Decl):
         vardicts[-1][1][line.name] = [None,None]
-        for i in line:
-            #Asignacion de tipo
-            if isinstance(i, pycparser.c_ast.TypeDecl):
-                if isinstance(i.type, pycparser.c_ast.Struct):
-                    vardicts[-1][1][line.name][0] = i.type.name+"(Struct)"
-                    vardicts[-1][1][line.name][1] = copy.deepcopy(estructuras[i.type.name])
-                else:
-                    vardicts[-1][1][line.name][0] = i.type.names[0]
+        #Asignacion de tipo
+        if isinstance(line.type.type, pycparser.c_ast.Struct):
+            vardicts[-1][1][line.name][0] = line.type.type.name+"(Struct)"
+            vardicts[-1][1][line.name][1] = copy.deepcopy(estructuras[line.type.type.name])
+        else:
+            vardicts[-1][1][line.name][0] = line.type.type.names[0]
             
-            #Igualar a retorno de funcion
-            elif isinstance(i, pycparser.c_ast.FuncCall):
-                funcion=copy.deepcopy(i)
-                line.init=pycparser.c_ast.Constant(None,None)
-                line.init.type=funciones[funcion.name.name].decl.type.type.type.names[0]
-                cabecera = dict()
-                for j in range(len(funciones[funcion.name.name].decl.type.args.params)):
-                    cabecera[funciones[funcion.name.name].decl.type.args.params[j].name] = [funciones[funcion.name.name].decl.type.args.params[j].type.type.names[0],getvalue(funcion.args.exprs[j])]
-                iterexec.append(copy.deepcopy(deque(funciones[funcion.name.name].body)))
-                vardicts.append([funcion.name.name,cabecera])
-                retornos.append(line.init)
-                raise FuncCallError()   
-                
-            #Declaracion de arrays
-            elif isinstance(i, pycparser.c_ast.ArrayDecl):
-                vardicts[-1][1][line.name][1] = list()
-                vardicts[-1][1][line.name][0] = arraydecl(i,vardicts[-1][1][line.name][1])
-            
-            #Valor inicial en arrays
-            elif isinstance(i, pycparser.c_ast.InitList):
-                initlist(i,vardicts[-1][1][line.name][1])
-                
-            #Valor inicial
+        #Igualar a retorno de funcion
+        if isinstance(line.init, pycparser.c_ast.FuncCall):
+            if line.init.name.name in funciones:
+                line.init = innerfunction(line.init)
+                raise FuncCallError
             else:
-                vardicts[-1][1][line.name][1] = getvalue(i)
+                line.init = outterfunction(line.init) 
+            
+        #Declaracion de arrays
+        elif isinstance(line.init, pycparser.c_ast.ArrayDecl):
+            vardicts[-1][1][line.name][1] = list()
+            vardicts[-1][1][line.name][0] = arraydecl(line.init,vardicts[-1][1][line.name][1])
+        
+        #Valor inicial en arrays
+        elif isinstance(line.init, pycparser.c_ast.InitList):
+            initlist(line.init,vardicts[-1][1][line.name][1])
+            
+        #Valor inicial
+        else:
+            vardicts[-1][1][line.name][1] = getvalue(line.init)
 
     #Asignacion de valores
     elif isinstance(line, pycparser.c_ast.Assignment):
         if isinstance(line.rvalue, pycparser.c_ast.FuncCall):
-            funcion=copy.deepcopy(line.rvalue)
-            line.rvalue=pycparser.c_ast.Constant(None,None)
-            line.rvalue.type=funciones[funcion.name.name].decl.type.type.type.names[0]
-            cabecera = dict()
-            for i in range(len(funciones[funcion.name.name].decl.type.args.params)):
-                cabecera[funciones[funcion.name.name].decl.type.args.params[i].name] = [funciones[funcion.name.name].decl.type.args.params[i].type.type.names[0],getvalue(funcion.args.exprs[i])]
-            iterexec.append(copy.deepcopy(deque(funciones[funcion.name.name].body)))
-            vardicts.append([funcion.name.name,cabecera])
-            retornos.append(line.rvalue)
-            raise FuncCallError()
+            if line.rvalue.name.name in funciones:
+                line.rvalue = innerfunction(line.rvalue)
+                raise FuncCallError
+            else:
+                line.rvalue = outterfunction(line.rvalue)
             
         if isinstance(line.lvalue, pycparser.c_ast.ArrayRef):
             setvalue(arrayref(line.lvalue),int(line.lvalue.subscript.value),line.op,line.rvalue)
@@ -469,29 +473,49 @@ def evalline(line):
     
     #Llamadas a funciones
     elif isinstance(line, pycparser.c_ast.FuncCall):
-        funccall(line)
+        if line.name.name in funciones:
+            innerfunction(line)
+        else:
+            outterfunction(line)
+        
         
     #Return
     elif isinstance(line, pycparser.c_ast.Return):
-        retornos.pop().value=getvalue(line.expr)
-        iterexec.pop()
-        vardicts.pop()
-        
+        valor = getvalue(line.expr)
+        retornos.pop().value=valor
+        raise ReturnError
                 
 
 
-def funccall(line,retorno=None):
+def innerfunction(line):
     '''
     Llamadas a funciones
     '''
-    if line.name.name in funciones:
-        cabecera = dict()
-        for i in range(len(funciones[line.name.name].decl.type.args.params)):
-            cabecera[funciones[line.name.name].decl.type.args.params[i].name] = copy.copy(vardicts[-1][1][line.args.exprs[i].name])
-        iterexec.append(copy.deepcopy(deque(funciones[line.name.name].body)))
-        vardicts.append([line.name.name,cabecera])
-    elif "printf" == line.name.name:
-        consola.config(state=NORMAL)
+    cabecera = dict()
+    for i in range(len(funciones[line.name.name].decl.type.args.params)):
+        if isinstance(line.args.exprs[i], pycparser.c_ast.FuncCall):
+            if line.args.exprs[i].name.name in funciones:
+                line.args.exprs[i] = innerfunction(line.args.exprs[i])
+                raise FuncCallError
+            else:
+                line.args.exprs[i] = outterfunction(line.args.exprs[i])
+        cabecera[funciones[line.name.name].decl.type.args.params[i].name] = [funciones[line.name.name].decl.type.args.params[i].type.type.names[0],getvalue(line.args.exprs[i])]
+    iterexec.append(copy.deepcopy(deque(funciones[line.name.name].body)))
+    vardicts.append([line.name.name,cabecera])
+    funcion=copy.deepcopy(line)
+    line=pycparser.c_ast.Constant(None,None)
+    line.type=funciones[funcion.name.name].decl.type.type.type.names[0]
+    if line.type != "void":
+        retornos.append(line)
+    return line
+    
+
+
+
+def outterfunction(line):
+        
+    if "printf" == line.name.name:
+        consola.config(state=tkinter.NORMAL)
         i=1
         imprimir = line.args.exprs[0].value[1:-1]
         while '%' in imprimir:
@@ -504,7 +528,7 @@ def funccall(line,retorno=None):
             consola.insert(tkinter.END, '\n')
             imprimir = imprimir[position+2:]
         consola.insert(tkinter.END, imprimir)
-        consola.config(state=DISABLED)
+        consola.config(state=tkinter.DISABLED)
     elif "scanf" == line.name.name:
         scanf(line)
     elif "strcpy" == line.name.name:
@@ -516,6 +540,9 @@ def funccall(line,retorno=None):
 
 
 def scanf(line):
+    '''
+    Lanza una ventana emergente para introducir el valor solicitado por el scanf
+    '''
     def escanear():
         value.value=valueentry.get()
         scan.destroy()
@@ -524,21 +551,21 @@ def scanf(line):
             evalline(asignacion)
         except ValueError:
             debugoff()
-            error = Toplevel(root)
+            error = tkinter.Toplevel(root)
             error.title("Advertencia")
             error.focus_set()
             error.grab_set()
             error.transient(master=root)
-            textframe = Frame(error)
-            textframe.pack( side = TOP )
-            textlabel = Label(textframe, text="Valor introducido no valido", height=10, width=50)
-            textlabel.pack( side = LEFT)
-            aceptframe = Frame(error)
-            aceptframe.pack( side = BOTTOM )
-            aceptbutton = Button(aceptframe, text="Aceptar",command=error.destroy)
-            aceptbutton.pack( side = LEFT)
+            textframe = tkinter.Frame(error)
+            textframe.pack( side = tkinter.TOP )
+            textlabel = tkinter.Label(textframe, text="Valor introducido no valido", height=10, width=50)
+            textlabel.pack( side = tkinter.LEFT)
+            aceptframe = tkinter.Frame(error)
+            aceptframe.pack( side = tkinter.BOTTOM )
+            aceptbutton = tkinter.Button(aceptframe, text="Aceptar",command=error.destroy)
+            aceptbutton.pack( side = tkinter.LEFT)
         else:
-            nextbutton.config(state=NORMAL)
+            nextbutton.config(state=tkinter.NORMAL)
     value = pycparser.c_ast.Constant(None,None)
     #conversion de tipos
     if "d" in line.args.exprs[0].value:
@@ -550,23 +577,24 @@ def scanf(line):
     elif "s" in line.args.exprs[0].value:
         value.type='string'
     #Ventana emergente que solicita la introduccion de una variable para el scan
-    nextbutton.config(state=DISABLED)
-    scan = Toplevel(root)
+    nextbutton.config(state=tkinter.DISABLED)
+    stepbutton.config(state=tkinter.DISABLED)
+    scan = tkinter.Toplevel(root)
     scan.focus_set()
     scan.grab_set()
     scan.transient(master=root)
     scan.title("Escanear valor")
-    textframe = Frame(scan)
-    textframe.pack(side = TOP)
-    textlabel = Label(textframe, text="Introduce el valor adecuado", height=4, width=50)
-    textlabel.pack(side = LEFT)
-    valueframe = Frame(scan)
-    valueframe.pack(side = TOP)
-    valueentry = Entry(valueframe)
-    valueentry.pack(side = LEFT)
-    buttonframe = Frame(scan)
-    buttonframe.pack(side = BOTTOM)
-    aceptbutton = Button(buttonframe, text="Aceptar", command=escanear)
+    textframe = tkinter.Frame(scan)
+    textframe.pack(side = tkinter.TOP)
+    textlabel = tkinter.Label(textframe, text="Introduce el valor adecuado", height=4, width=50)
+    textlabel.pack(side = tkinter.LEFT)
+    valueframe = tkinter.Frame(scan)
+    valueframe.pack(side = tkinter.TOP)
+    valueentry = tkinter.Entry(valueframe)
+    valueentry.pack(side = tkinter.LEFT)
+    buttonframe = tkinter.Frame(scan)
+    buttonframe.pack(side = tkinter.BOTTOM)
+    aceptbutton = tkinter.Button(buttonframe, text="Aceptar", command=escanear)
     aceptbutton.pack()
     
     
@@ -699,16 +727,11 @@ def unary(line):
     '''
     global vardicts
     if isinstance(line.expr, pycparser.c_ast.FuncCall):
-        funcion=copy.deepcopy(line.expr)
-        line.expr=pycparser.c_ast.Constant(None,None)
-        line.expr.type=funciones[funcion.name.name].decl.type.type.type.names[0]
-        cabecera = dict()
-        for i in range(len(funciones[funcion.name.name].decl.type.args.params)):
-            cabecera[funciones[funcion.name.name].decl.type.args.params[i].name] = [funciones[funcion.name.name].decl.type.args.params[i].type.type.names[0],getvalue(funcion.args.exprs[i])]
-        iterexec.append(copy.deepcopy(deque(funciones[funcion.name.name].body)))
-        vardicts.append([funcion.name.name,cabecera])
-        retornos.append(line.expr)
-        raise FuncCallError()
+        if line.expr.name.name in funciones:
+            line.expr = innerfunction(line.expr)
+            raise FuncCallError
+        else:
+            line.expr = outterfunction(line.expr)
         
     elif isinstance(line.expr, pycparser.c_ast.ID):
         variable = line.expr.name
@@ -745,27 +768,19 @@ def binary(line):
     #Obtencion de los operandos
     
     if isinstance(line.left, pycparser.c_ast.FuncCall):
-        funcion=copy.deepcopy(line.left)
-        line.left=pycparser.c_ast.Constant(None,None)
-        line.left.type=funciones[funcion.name.name].decl.type.type.type.names[0]
-        cabecera = dict()
-        for i in range(len(funciones[funcion.name.name].decl.type.args.params)):
-            cabecera[funciones[funcion.name.name].decl.type.args.params[i].name] = [funciones[funcion.name.name].decl.type.args.params[i].type.type.names[0],getvalue(funcion.args.exprs[i])]
-        iterexec.append(copy.deepcopy(deque(funciones[funcion.name.name].body)))
-        vardicts.append([funcion.name.name,cabecera])
-        retornos.append(line.left)
-        raise FuncCallError()
+        if line.left.name.name in funciones:
+            line.left = innerfunction(line.left)
+            raise FuncCallError
+        else:
+            line.left = outterfunction(line.left)
+            
     if isinstance(line.right, pycparser.c_ast.FuncCall):
-        funcion=copy.deepcopy(line.right)
-        line.right=pycparser.c_ast.Constant(None,None)
-        line.right.type=funciones[funcion.name.name].decl.type.type.type.names[0]
-        cabecera = dict()
-        for i in range(len(funciones[funcion.name.name].decl.type.args.params)):
-            cabecera[funciones[funcion.name.name].decl.type.args.params[i].name] = [funciones[funcion.name.name].decl.type.args.params[i].type.type.names[0],getvalue(funcion.args.exprs[i])]
-        iterexec.append(copy.deepcopy(deque(funciones[funcion.name.name].body)))
-        vardicts.append([funcion.name.name,cabecera])
-        retornos.append(line.right)
-        raise FuncCallError()
+        if line.right.name.name in funciones:
+            line.right = innerfunction(line.right)
+            raise FuncCallError
+        else:
+            line.right = outterfunction(line.right)
+            
     operandos.append(getvalue(line.left))
     operandos.append(getvalue(line.right))
     
@@ -828,21 +843,26 @@ class FuncCallError(Exception):
     pass
 
 
+class ReturnError(Exception):
+    pass
+
+
 
 def debugoff():
     '''
     Sale del modo debug
     '''
-    newbutton.config(state=NORMAL)
-    openbutton.config(state=NORMAL)
-    exebutton.config(state=NORMAL)
-    nextbutton.config(state=DISABLED)
-    code.config(state=NORMAL)
+    newbutton.config(state=tkinter.NORMAL)
+    openbutton.config(state=tkinter.NORMAL)
+    exebutton.config(state=tkinter.NORMAL)
+    nextbutton.config(state=tkinter.DISABLED)
+    stepbutton.config(state=tkinter.DISABLED)
+    code.config(state=tkinter.NORMAL)
     code.tag_delete("exe")
-    variables.config(state=NORMAL)
-    variables.delete(1.0,END)
-    variables.config(state=DISABLED)
-    debugbutton.config(text="Acceder al modo debug", command=debugon)
+    variables.config(state=tkinter.NORMAL)
+    variables.delete(1.0,tkinter.END)
+    variables.config(state=tkinter.DISABLED)
+    debugbutton.config(text="Acceder al modo debug", command=debugon, image=iconstart, width=30, height=30)
 
 def editado(texto):
     '''
@@ -851,13 +871,16 @@ def editado(texto):
     global saved
     global compiled
     code.tag_delete("err")
-    savebutton.config(state=NORMAL)
-    compilebutton.config(state=NORMAL)
+    savebutton.config(state=tkinter.NORMAL)
+    compilebutton.config(state=tkinter.NORMAL)
     saved = False
     compiled = False
     
 
-def get_file():   
+def get_file():
+    '''
+    Abre una ventana emergente para abrir un archivo
+    '''
     global filename
 #    Tk().withdraw()
     filename = filedialog.askopenfilename()
@@ -867,50 +890,65 @@ def get_file():
 
     
 if __name__ == "__main__":
-    root = Tk()
+    root = tkinter.Tk()
+    
+    iconnew=tkinter.PhotoImage(file="icons/new.png").subsample(18,18)
+    iconopen=tkinter.PhotoImage(file="icons/open.png").subsample(18,18)
+    iconsave=tkinter.PhotoImage(file="icons/save.png").subsample(18,18)
+    iconstart=tkinter.PhotoImage(file="icons/start.png").subsample(18,18)
+    iconstop=tkinter.PhotoImage(file="icons/stop.png").subsample(18,18)
+    iconcompile=tkinter.PhotoImage(file="icons/compile.png").subsample(18,18)
+    iconexe=tkinter.PhotoImage(file="icons/execute.png").subsample(18,18)
+    iconstep=tkinter.PhotoImage(file="icons/step.png").subsample(18,18)
+    iconnext=tkinter.PhotoImage(file="icons/next.png").subsample(18,18)
+
+
     root.title("TFG")
     root.state('zoomed')
-    frame = Frame(root)
+    frame = tkinter.Frame(root)
     frame.pack()
     
-    textframe = Frame(root)
+    textframe = tkinter.Frame(root)
     textframe.pack()
     
-    consoleframe = Frame(root)
+    consoleframe = tkinter.Frame(root)
     consoleframe.pack()
     
-    newbutton = Button(frame, text="Nuevo...",command=nuevo)
-    newbutton.pack( side = LEFT)
+    newbutton = tkinter.Button(frame, text="Nuevo...", command=nuevo, image=iconnew, width=30, height=30)
+    newbutton.pack( side = tkinter.LEFT)
     
-    openbutton = Button(frame, text="Abrir",command=abrir)
-    openbutton.pack( side = LEFT )
+    openbutton = tkinter.Button(frame, text="Abrir", command=abrir, image=iconopen, width=30, height=30)
+    openbutton.pack( side = tkinter.LEFT )
     
-    savebutton = Button(frame, text="Guardar",command=guardar, state=DISABLED)
-    savebutton.pack( side = LEFT )
+    savebutton = tkinter.Button(frame, text="Guardar", command=guardar, image=iconsave, width=30, height=30, state=tkinter.DISABLED)
+    savebutton.pack( side = tkinter.LEFT )
        
-    compilebutton = Button(frame, text="Compilar",command=compilar, state=DISABLED)
-    compilebutton.pack( side = LEFT )
+    compilebutton = tkinter.Button(frame, text="Compilar",command=compilar, image=iconcompile, width=30, height=30, state=tkinter.DISABLED)
+    compilebutton.pack( side = tkinter.LEFT )
     
-    exebutton = Button(frame, text="Ejecutar",command=ejecutar)
-    exebutton.pack( side = LEFT )
+    exebutton = tkinter.Button(frame, text="Ejecutar",command=ejecutar, image=iconexe, width=30, height=30)
+    exebutton.pack( side = tkinter.LEFT )
     
-    debugbutton = Button(frame, text="Acceder al modo debug",command=debugon)
-    debugbutton.pack( side = LEFT )
+    debugbutton = tkinter.Button(frame, text="Acceder al modo debug",command=debugon, image=iconstart, width=30, height=30)
+    debugbutton.pack( side = tkinter.LEFT )
     
-    nextbutton = Button(frame, text="Next",command=nextline, state=DISABLED )
-    nextbutton.pack( side = LEFT )
+    nextbutton = tkinter.Button(frame, text="Next",command=nextline, image=iconnext, width=30, height=30, state=tkinter.DISABLED )
+    nextbutton.pack( side = tkinter.LEFT )
+    
+    stepbutton = tkinter.Button(frame, text="Skip",command=skip, image=iconstep, width=30, height=30, state=tkinter.DISABLED )
+    stepbutton.pack( side = tkinter.LEFT )
     
     code = scrolledtext.ScrolledText(textframe, height=40, width=200)
-    code.pack(side = LEFT)
+    code.pack(side = tkinter.LEFT)
 #    code.tag_add("exe","1.0","1.0")
 
     variables = scrolledtext.ScrolledText(textframe, height=40, width=75)
-    variables.pack(side = RIGHT)
-    variables.config(state=DISABLED)
+    variables.pack(side = tkinter.RIGHT)
+    variables.config(state=tkinter.DISABLED)
     
     consola = scrolledtext.ScrolledText(consoleframe, height=20, width=270)
-    consola.pack(side = BOTTOM)
-    consola.config(state=DISABLED)
+    consola.pack(side = tkinter.BOTTOM)
+    consola.config(state=tkinter.DISABLED)
     
     code.bind('<KeyRelease>', editado)
 

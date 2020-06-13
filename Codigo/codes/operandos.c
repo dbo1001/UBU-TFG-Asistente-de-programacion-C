@@ -7,12 +7,14 @@ int main(){
 	int e = a ^ b;
 	c = a < b;
 	d = a > b;
+	int f=a+b+c+d+e;
 	while (a){
 		a--;
 	}
 	printf("%d %d\n", c, d);
 	return 0;
 }
+
 
 
 
