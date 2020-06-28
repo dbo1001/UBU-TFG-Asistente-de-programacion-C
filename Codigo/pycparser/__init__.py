@@ -94,5 +94,4 @@ def parse_file(filename, use_cpp=False, cpp_path='cpp', cpp_args='-d stdarg.h',
         text = text + i + '\n'
     if parser is None:
         parser = CParser()
-    print(text)
     return parser.parse(text, filename)

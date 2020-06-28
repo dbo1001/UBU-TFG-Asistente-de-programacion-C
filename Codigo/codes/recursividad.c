@@ -1,7 +1,7 @@
 #include <stdio.h>
 int recursividad(int i);
 int main(){
-	int i = 10;
+	int i = 3;
 	int j = recursividad(i);
 	printf("%d\n",j);
 	return 0;
@@ -14,6 +14,8 @@ int recursividad(int i){
 	}
 	return c;
 }
+
+
 
 
 

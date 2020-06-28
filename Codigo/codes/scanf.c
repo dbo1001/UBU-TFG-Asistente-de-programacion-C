@@ -9,3 +9,5 @@ int main(){
 	printf("la multiplicacion de %d y %d es igaul a %d",a,b,c);
 	return 0;
 }
+
+

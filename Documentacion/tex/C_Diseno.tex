@@ -2,12 +2,286 @@
 
 \section{Introducción}
 
-
+Aquí se especificará las estructuras de datos utilizadas al igual que las trazas de las funciones empleadas.
 
 \section{Diseño de datos}
 
+Esta aplicación no guarda datos en ningún sitio más allá de los archivos C creados por el usuario,
+esto no quiere decir que no tenga estructuras de datos internas con las que trabaja.\\
+Esta aplicación hay 5 estructuras de datos grandes\footnote{En el caso de usar bicolas o listas es por optimización, en caso de que las operaciones mas utilizadas sean las de indexación se usan listas, y si en caso contrario las operaciones mas usadas sean las de push(llamada append en Python) y pop se usaran bicolas}: \begin{enumerate}
+\item funciones: Es un diccionario que guarda las funciones declaradas en el archivo sobre el que estás trabajando, la clave del diccionario es el nombre de la función y el valor es una bicola que cada elemento es una linea de la función
+\item iterexec: es una lista de bicolas, las bicolas son las funciones que se van a ejecutar y se guardan en esta lista en el orden que se deben ejecutar, en caso de que se invoque a una función se añade a esta lista y en caso de un return se borra
+\item vardicts: es una lista de diccionarios, en dichos diccionarios se almacenan las variables que se usan en cada función, la clave de estos diccionarios es el nombre de la variable y el valor es una lista compuesta por el tipo de la variable y el valor de la misma. Cada vez que se entra a una función se genera un nuevo diccionario y cada vez que se sale, bien por un return o porque se ha llegado al final de la función, se borra uno
+\item estructuras: es un diccionario que como clave tiene las estructuras que son utilizadas en el archivo sobre el que estamos trabajando, la clave es el nombre de la estructura y el valor es un diccionario que actua de forma similar a los usados en vardicts que se componen por el nombre de los campos por claves y su tipo y valor como los valores del diccionario
+\item retornos: es una bicola para manejar los retornos del archivo que estamos ejecutando, cada vez que se entra una función se añade un elemento a la bicola y si se llega un retorno se extrae un elemento para ser modificado
+\end{enumerate}
+
 \section{Diseño procedimental}
+
+Lo primero de todo para poder hacer funcionar la aplicación debemos trabajar sobre un archivo, para ello tenemos dos opciones crear uno nuevo (ver traza:\ref{fig:flow_new}) y guardarlo o cargar (ver traza:\ref{fig:flow_open}) uno ya creado, una vez guardado (ver traza:\ref{fig:flow_save}) el archivo ya se podría compilar. Si compilamos (ver traza:\ref{fig:flow_compile}) el archivo podremos acceder a las opciones de ejecutar (ver traza:\ref{fig:flow_exe}) y activar el modo debugger (ver traza:\ref{fig:flow_bug}). Si accedemos al modo debugger podemos optar por ejecutar una linea entrando (ver traza:\ref{fig:flow_linea1}) o no (ver traza:\ref{fig:flow_linea2}) en las funciones.\\Para ver una traza general del programa ver:\ref{fig:flow_gen}\\
+\begin{figure}
+    \begin{tikzpicture}[node distance=2cm]
+    \node (start) [startstop] {Inicio};
+    \node (open) [process, below of=start] {Abrir archivo};
+    \node (new) [process, right of=open, xshift= 2cm] {Nuevo archivo};
+    \node (edit) [io, below of=open] {Editar archivo};
+    \node (save) [process, below of=edit] {Guardar archivo};
+    \node (comp) [process, below of=save] {Compilar};
+    \node (bug) [process, below of=comp] {Debuggear};
+    \node (exe) [process, below of=comp, xshift= 7cm] {Ejecutar};
+    \node (linea1) [process, below of=bug, yshift=-1cm] {Ejecutar 1 linea entrando en función};
+    \node (linea2) [process, right of=linea1, xshift= 2cm] {Ejecutar 1 linea saltando función};
+    \node (left) [decision, below of=linea1, yshift= -1.5cm] {¿Quedan lineas por ejecutar?};
+    \node (continue) [decision, left of=left, xshift= -3cm] {¿Seguir debuggeo?};
+    \node (stop) [startstop, below of=left, yshift= -1.5cm] {Fin};
+    
+    \draw [arrow] (start) -- (open);
+    \draw [arrow] (start) -| (new);
+    \draw [arrow] (open) -- (edit);
+    \draw [arrow] (new) |- (save);
+    \draw [arrow] (edit) -- (save);
+    \draw [arrow] (save) -- (comp);
+    \draw [arrow] (comp) -- (bug);
+    \draw [arrow] (comp) -| (exe);
+    \draw [arrow] (bug) -- (linea1);
+    \draw [arrow] (bug) -| (linea2);
+    \draw [arrow] (left) -- node[anchor=east] {no} (stop);
+    \draw [arrow] (left) -- node[anchor=north] {si} (continue);
+    \draw [arrow] (continue) |- node[anchor=south] {si} (bug);
+    \draw [arrow] (continue) |- node[anchor=north] {no} (stop);
+    \draw [arrow] (linea1) -- (left);
+    \draw [arrow] (linea2) |- (left);
+    \draw [arrow] (exe) |- (stop);
+    \end{tikzpicture}
+    \caption{Ejemplo de una ejecución normal del programa}
+    \label{fig:flow_gen}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \begin{tikzpicture}[node distance=2cm]
+    \node (start) [startstop] {Inicio};
+    \node (code) [process, below of=start] {Cambiar el código a lo básico};
+    \node (name) [process, below of=code, yshift= -1.5cm] {Borrar la variable donde se almacena el nombre del archivo sobre el que trabajamos};
+    \node (stop) [startstop, below of=name, yshift= -1cm] {Fin};
+    
+    \draw [arrow] (start) -- (code);
+    \draw [arrow] (code) -- (name);
+    \draw [arrow] (name) -- (stop);
+    \end{tikzpicture}
+    \caption{Traza de la función nuevo}
+    \label{fig:flow_new}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \begin{tikzpicture}[node distance=2cm]
+    \node (start) [startstop] {Inicio};
+    \node (name) [io, below of=start] {Nombre del archivo};
+    \node (exist) [decision, below of=name, yshift= -1.5cm] {¿existe el archivo?};
+    \node (inex) [startstop, right of=exist, xshift= 3cm] {No existe archivo fin};
+    \node (ext) [decision, below of=exist, yshift= -3cm] {¿Tiene extensión .c?};
+    \node (errext) [startstop, left of=ext,xshift = -3.2cm] {Extensión incorrecta fin};
+    \node (code) [process, below of=ext, yshift= -2cm] {copia contenido del archivo en el cuadro de código};
+    \node (save) [process, below of=code, yshift= -1.2cm] {Almacena el nombre del archivo sobre el que trabajamos};
+    \node (stop) [startstop, below of=save, yshift= -0.8cm] {Fin};
+    
+    \draw [arrow] (start) -- (name);
+    \draw [arrow] (name) -- (exist);
+    \draw [arrow] (exist) -- node[anchor=north] {no} (inex);
+    \draw [arrow] (exist) -- node[anchor=east] {si} (ext);
+    \draw [arrow] (ext) -- node[anchor=north] {no} (errext);
+    \draw [arrow] (ext) -- node[anchor=east] {si} (code);
+    \draw [arrow] (code) -- (save);
+    \draw [arrow] (save) -- (stop);
+    \end{tikzpicture}
+    \caption{Traza de la función abrir}
+    \label{fig:flow_open}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \begin{tikzpicture}[node distance=2cm]
+    \node (start) [startstop] {Inicio};
+    \node (name) [io, below of=start] {Nombre del archivo};
+    \node (ext) [decision, below of=name, yshift= -1.5cm] {¿Tiene extensión .c?};
+    \node (errext) [startstop, left of=ext,xshift = -3.2cm] {Extensión incorrecta fin};
+    \node (exist) [decision, below of=ext, yshift= -3cm] {¿existe el archivo?};
+    \node (inex) [process, right of=exist, xshift= 3cm] {Crea nuevo archivo};
+    \node (code) [process, below of=exist, yshift= -2cm] {sobreescribe el codigo del archivo};
+    \node (stop) [startstop, below of=code, yshift= -0.8cm] {Fin};
+    
+    \draw [arrow] (start) -- (name);
+    \draw [arrow] (name) -- (ext);
+    \draw [arrow] (exist) -- node[anchor=north] {no} (inex);
+    \draw [arrow] (exist) -- node[anchor=east] {si} (code);
+    \draw [arrow] (ext) -- node[anchor=north] {no} (errext);
+    \draw [arrow] (ext) -- node[anchor=east] {si} (exist);
+    \draw [arrow] (inex) |- (stop);
+    \draw [arrow] (code) -- (stop);
+    \end{tikzpicture}
+    \caption{Traza de la función guardar}
+    \label{fig:flow_save}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \begin{tikzpicture}[node distance=2cm]
+    \node (start) [startstop] {Inicio};
+    \node (saved) [decision, below of=name, yshift= -1.5cm] {¿se han guardado los cambios?};
+    \node (save) [process, left of=saved, xshift = -3.2cm] {Se llama a guardar};
+    \node (comp) [process, below of=saved, yshift= -2.5cm] {Se compila el archivo};
+    \node (stop) [startstop, below of=code] {Fin};
+    
+    \draw [arrow] (start) -- (saved);
+    \draw [arrow] (saved) -- node[anchor=north] {no} (save);
+    \draw [arrow] (saved) -- node[anchor=east] {si} (comp);
+    \draw [arrow] (save) |- (comp);
+    \draw [arrow] (comp) -- (stop);
+    \end{tikzpicture}
+    \caption{Traza de la función compilar}
+    \label{fig:flow_compile}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \begin{tikzpicture}[node distance=2cm]
+    \node (start) [startstop] {Inicio};
+    \node (save1) [decision, below of=name] {¿se han guardado los cambios?};
+    \node (save2) [process, left of=save1, xshift = -3.2cm] {Se llama a guardar};
+    \node (comp1) [decision, below of=save1, yshift= -3.3cm] {¿se ha compilado el archivo?};
+    \node (comp2) [process, right of=comp1, xshift = 3.2cm] {Se llama a compilar};
+    \node (exe) [process, below of=comp1, yshift= -2.5cm] {Se llama al sistema para que ejecute el programa};
+    \node (stop) [startstop, below of=code] {Fin};
+    
+    \draw [arrow] (start) -- (save1);
+    \draw [arrow] (save1) -- node[anchor=north] {no} (save2);
+    \draw [arrow] (save1) -- node[anchor=east] {si} (comp1);
+    \draw [arrow] (comp1) -- node[anchor=north] {no} (comp2);
+    \draw [arrow] (comp1) -- node[anchor=east] {si} (exe);
+    \draw [arrow] (save2) |- (comp1);
+    \draw [arrow] (comp2) |- (exe);
+    \draw [arrow] (exe) -- (stop);
+    \end{tikzpicture}
+    \caption{Traza de la función compilar}
+    \label{fig:flow_exe}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \begin{tikzpicture}[node distance=2cm]
+    \node (start) [startstop] {Inicio};
+    \node (save1) [decision, below of=name] {¿se han guardado los cambios?};
+    \node (save2) [process, left of=save1, xshift = -3.2cm] {Se llama a guardar};
+    \node (comp1) [decision, below of=save1, yshift= -3.3cm] {¿se ha compilado el archivo?};
+    \node (comp2) [process, right of=comp1, xshift = 3.2cm] {Se llama a compilar};
+    \node (bug1) [process, below of=comp1, yshift= -2.5cm] {Se transforma el código C original en un árbol iterable};
+    \node (bug2) [process, below of=bug1, yshift= -1.5cm] {Se crean las estructuras de datos con las que va a trabajar el depurador};
+    \node (stop) [startstop, below of=bug2, yshift= -1cm] {Fin};
+    
+    \draw [arrow] (start) -- (save1);
+    \draw [arrow] (save1) -- node[anchor=north] {no} (save2);
+    \draw [arrow] (save1) -- node[anchor=east] {si} (comp1);
+    \draw [arrow] (comp1) -- node[anchor=north] {no} (comp2);
+    \draw [arrow] (comp1) -- node[anchor=east] {si} (exe);
+    \draw [arrow] (save2) |- (comp1);
+    \draw [arrow] (comp2) |- (bug1);
+    \draw [arrow] (bug1) -- (bug2);
+    \draw [arrow] (bug2) -- (stop);
+    \end{tikzpicture}
+    \caption{Traza de la función modo debug}
+    \label{fig:flow_bug}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \begin{tikzpicture}[node distance=2cm]
+    \node (start) [startstop] {Inicio};
+    \node (linea) [process, below of=start] {Ejecuta siguente linea};
+    \node (sub) [process, below of=linea,] {Marca la linea ejecutada};
+    \node (var1) [process, below of=sub, yshift= -1cm] {Modifica las variables acorde a la linea ejecutada};
+    \node (var2) [io, below of=var1, yshift= -1cm] {Muestra el valor de las variables por pantalla};
+    \node (cons) [io, below of=var2, yshift= -1cm] {Escribe por la consola lo que exija la linea};
+    \node (stop) [startstop, below of=cons, yshift= -1cm] {Fin};
+    
+    \draw [arrow] (start) -- (linea);
+    \draw [arrow] (linea) -- (sub);
+    \draw [arrow] (sub) -- (var1);
+    \draw [arrow] (var1) -- (var2);
+    \draw [arrow] (var2) -- (cons);
+    \draw [arrow] (cons) -- (stop);
+    \end{tikzpicture}
+    \caption{Traza de la función ejecutar una linea entrando en función}
+    \label{fig:flow_linea1}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \begin{tikzpicture}[node distance=2cm]
+    \node (start) [startstop] {Inicio};
+    \node (linea1) [process, below of=start] {Ejecuta siguente linea};
+    \node (linea2) [decision, below of=linea1, yshift= -1.5cm] {¿Entra en otra función?};
+    \node (var1) [process, right of=linea2, xshift= 3cm] {Modifica las variables acorde a la linea ejecutada};
+    \node (var2) [process, below of=linea2, yshift=-2cm] {Modifica las variables acorde a la linea ejecutada};
+    \node (linea3) [process, right of=var1, xshift= 3cm] {Ejecuta siguiente linea};
+    \node (linea4) [decision, below of=var1, yshift= -2cm] {¿sale de la función?};
+    \node (var3) [io, below of=linea2, yshift= -5cm] {Muestra el valor de las variables por pantalla};
+    \node (cons) [io, below of=var3, yshift= -1cm] {Escribe por la consola lo que exija la linea};
+    \node (stop) [startstop, below of=cons, yshift= -1cm] {Fin};
+    
+    \draw [arrow] (start) -- (linea1);
+    \draw [arrow] (linea1) -- (linea2);
+    \draw [arrow] (linea2) -- node[anchor=north] {si} (var1);
+    \draw [arrow] (var1) -- (linea3);
+    \draw [arrow] (linea3) |- (linea4);
+    \draw [arrow] (linea4) -- node[anchor=east] {no} (var1);
+    \draw [arrow] (linea2) -- node[anchor=east] {no} (var2);
+    \draw [arrow] (linea4) -- node[anchor=north] {si} (var2);
+    \draw [arrow] (var2) -- (var3);
+    \draw [arrow] (var3) -- (cons);
+    \draw [arrow] (cons) -- (stop);
+    \end{tikzpicture}
+    \caption{Traza de la función ejecutar una linea saltando función}
+    \label{fig:flow_linea2}
+\end{figure}
+
+\clearpage
 
 \section{Diseño arquitectónico}
 
+En cuanto al numero de usuarios que van a usar la aplicación  y el número de funciones a las que van a poder acceder es muy simple. Habrá un solo usuario llamado alumno el cual tendrá acceso a todas las funciones de la aplicación. Ver\ref{fig:diagrama de usuarios}
 
+En cuanto a como interactúan las estructuras de datos con las funciones tampoco es complejo ya que las funciones externas ajenas a la depuración no modifican dichas estructuras. Las funciones propias de la depuración interactúan de la siguiente forma:
+\begin{itemize}
+    \item El primer paso es llamar al modo debug el cual crea las estructuras de: funciones, iterexec, vardicts, estructuras y retornos. Las que primero se crean son funciones y estructuras, posteriormente se añade a iterexec el main y a vardicts un diccionario vacío donde el main almacenará las variables y finalmente se crea retornos que se inicializara como una bicola vacía.
+    \item Cada vez que ejecutar linea llega a la inicialización de una variable esta se añadirá al diccionario correspondiente a la función que actualmente estamos depurando con valor desconocido si no se inicializa con ningún valor o con el valor con el que se inicialice si se da el caso.
+    \item Cada vez que se declara una variable como un struct se busca dicho struct en el diccionario de estructuras y se añade la variable con el tipo struct al diccionario correspondiente de vardicts a la función actual.
+    \item cada vez que se altera una variable se busca en el diccionario correspondiente a la función que se está ejecutando actualmente y se modifica su valor.
+    \item Cada vez que se llama a una función se busca en funciones la misma y se añade a iterexec para ser ejecutada, también se añade a vardicts un diccionario para las variables de la función recién añadida y en caso de que la función no este declarada como void se añadirá a la pila de retornos un retorno.
+    \item Cada vez que se llega a un retorno se devuelve un valor de la pila de retornos y se vacía la pila de la ejecución de la función que se está depurando.
+\end{itemize}
+
+\clearpage
+
+\begin{figure}
+    \begin{tikzpicture}[node distance=2cm]
+    \node (alu) [startstop] {Usuario: Alumno};
+    \node (new) [process, right of=alu, xshift= 5cm, yshift=7cm] {Función: nuevo};
+    \node (open) [process, below of=new] {Función: abrir};
+    \node (save) [process, below of=open] {Función: guardar};
+    \node (comp) [process, below of=save] {Función: compilar};
+    \node (bug) [process, below of=comp] {Función: modo debug};
+    \node (linea1) [process, below of=bug] {Función: ejecutar linea entrando en función};
+    \node (linea2) [process, below of=linea1, yshift=-1cm] {Función: ejecutar linea saltando función};
+    
+    \draw [arrow] (alu) -- (new);
+    \draw [arrow] (alu) -- (save);
+    \draw [arrow] (alu) -- (open);
+    \draw [arrow] (alu) -- (comp);
+    \draw [arrow] (alu) -- (bug);
+    \draw [arrow] (alu) -- (linea1);
+    \draw [arrow] (alu) -- (linea2);
+    \end{tikzpicture}
+    \caption{Diagrama de usuarios}
+    \label{fig:diagrama de usuarios}
+\end{figure}

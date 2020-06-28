@@ -6,7 +6,7 @@ int resta (int a, int b);
  
 int main () {//y en mitad de la linea???
 	int a = 10;
-	int b = 5;
+	int b = 5
 	suma(a,b);
 	int c;
 	c = resta(a,b) * resta(a,b);
@@ -22,6 +22,11 @@ void suma (int x, int y){
 int resta (int a, int b){
 	return a - b;
 }
+
+
+
+
+
 
 
 

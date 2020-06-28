@@ -4,26 +4,21 @@
 \item El principal objetivo del proyecto es la creación de una interfaz limpia y clara que permita monitorizar las variables para nuevos alumnos que nunca hayan estudiado programación. Para ello nos basaremos en interfaces de desarrollo vistos en distintas clases prácticas: MatLab, Spyder y Eclipse.
 \item Uno de los objetivos es que el interprete de C muestre por pantalla el estado de todas la variables utilizadas en la ejecución, mostrando su valor, su espacio en memoria y su tipo ver \ref{tabla:1}.
 
-\tablaSmall{Ejemplo de visualización de la tabla de variables}{|l|c|c|c|}{1}{
- \textbf{Nombre} & \textbf{Tipo} & \textbf{Hex} & \textbf{valor}\\ 
+\tablaSmall{Ejemplo de visualización de la tabla de variables}{|l|c|c|}{1}{
+ \textbf{Nombre} & \textbf{Tipo} & \textbf{valor}\\ 
 }{
-Num & int & 0x5F8 & 1528 \\ 
-Letra & char & 0x3F & ? \\ 
+Num & int & 1528 \\ 
+Letra & char &  ? \\ 
 \hline
+Vector & int[3] & [23,57,31] \\ 
 \hline
-\blacktriangledown Vector & int[3] & - & - \\
- Vector[0] & int & 0x17 & 23 \\ 
- Vector[1] & int & 0x39 & 57 \\  
- Vector[2] & int & 0x8D & 141 \\  
-\hline
-\hline
-\blacktriangledown Estructura & Struct[3] & - & - \\
+Libro & Book(Struct) & - \\
 
-Estructura[0] & int & 0x5D & 93 \\ 
+->Titulo & char[100] & El viento en los sauces \\ 
 
-Estructura[1] & char & 0x40 & @ \\  
+->Autor & char[50] & Kenneth Grahame \\  
  
-Estructura[2] & char & 0x20 &   \\
+->ISBN & int & 1530059984 \\
 }
 
 \item Otro de los objetivos es que el interprete nos permita ejecutar las lineas de código una a una

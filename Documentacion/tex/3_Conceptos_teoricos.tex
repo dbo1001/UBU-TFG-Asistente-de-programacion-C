@@ -1,4 +1,4 @@
-\capitulo{3}{Conceptos teóricos}
+\chapter{Conceptos teóricos}
 
 \begin{description}
     \item[Compilador]: un compilador es un traductor que se encarga de convertir el código fuente a código máquina para poder ser entendido por una maquina
@@ -14,14 +14,10 @@
         \item constante numérica [6]
     \end{enumerate}
     
-    \item[Parser o analizador sintáctico]: agrupa los token resultados del lexer formando frases gramaticales que posteriormente serán analizadas por el compilador. Utilizando el ejemplo visto con el lexer (a = 2 + 6), así quedaría con el parser:
-    
-    \Tree [.{operación de asignación} {ID a} {op =} [.{operación suma} {num 2} {op +} {num 6} ] ]
+    \item[Parser o analizador sintáctico]: agrupa los token resultados del lexer formando frases gramaticales que posteriormente serán analizadas por el compilador. Utilizando el ejemplo visto con el lexer (a = 2 + 6), así quedaría con el parser ver:\ref{fig:parse_tree}
+    \begin{figure}
+        \Tree [.{operación de asignación} {ID a} {op =} [.{operación suma} {num 2} {op +} {num 6} ] ]
+        \caption{Árbol definido por el parser de la sentencia a = 2 + 6}
+        \label{fig:parse_tree}
+    \end{figure}
 \end{description}
-
-
-\footnote{Definiciones extraídas del libro: Jiménez Millán, José Antonio. (2014). Compiladores y procesadores del lenguaje. Cádiz, España: Servicio de Publicaciones de la Universidad de Cádiz.}
-
-Algunos conceptos teóricos de \LaTeX \footnote{Créditos a los proyectos de Álvaro López Cantero: Configurador de Presupuestos y Roberto Izquierdo Amo: PLQuiz}.
-
-
